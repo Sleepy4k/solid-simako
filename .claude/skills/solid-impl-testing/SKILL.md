@@ -291,9 +291,10 @@ src/
 ├── components/
 │   ├── Counter.tsx
 │   └── Counter.test.tsx          ← Co-located test files
-├── hooks/
-│   ├── useCounter.ts
-│   └── useCounter.test.ts
+├── lib/
+│   └── client/
+|       ├── api.ts
+|       └── api.test.ts           ← Tests for lib
 ├── test-setup.ts                 ← Global test setup
 └── __tests__/                    ← Alternative: dedicated test folder
     └── integration/

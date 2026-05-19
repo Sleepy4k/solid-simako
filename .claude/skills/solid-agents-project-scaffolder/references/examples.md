@@ -1,331 +1,6 @@
 # Complete Scaffold Examples
 
-## Example 1: Complete Plain SolidJS Project
-
-This is the full file-by-file output for a plain SolidJS client-side SPA with routing, state management, and testing.
-
-### File: package.json
-
-```json
-{
-  "name": "my-solid-app",
-  "version": "0.0.0",
-  "private": true,
-  "type": "module",
-  "scripts": {
-    "dev": "vite",
-    "build": "vite build",
-    "preview": "vite preview",
-    "test": "vitest",
-    "test:run": "vitest run"
-  },
-  "dependencies": {
-    "@solidjs/router": "^0.15.0",
-    "solid-js": "^1.9.0"
-  },
-  "devDependencies": {
-    "@solidjs/testing-library": "^0.8.0",
-    "jsdom": "^24.0.0",
-    "typescript": "^5.4.0",
-    "vite": "^5.0.0",
-    "vite-plugin-solid": "^2.10.0",
-    "vitest": "^2.0.0"
-  }
-}
-```
-
-### File: index.html
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="utf-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>My Solid App</title>
-  </head>
-  <body>
-    <div id="root"></div>
-    <script src="/src/index.tsx" type="module"></script>
-  </body>
-</html>
-```
-
-### File: vite.config.ts
-
-```typescript
-import { defineConfig } from "vite";
-import solidPlugin from "vite-plugin-solid";
-
-export default defineConfig({
-  plugins: [solidPlugin()],
-  server: {
-    port: 3000,
-  },
-  build: {
-    target: "esnext",
-  },
-});
-```
-
-### File: tsconfig.json
-
-```json
-{
-  "compilerOptions": {
-    "strict": true,
-    "target": "ESNext",
-    "module": "ESNext",
-    "moduleResolution": "bundler",
-    "jsx": "preserve",
-    "jsxImportSource": "solid-js",
-    "types": ["vite/client"],
-    "noEmit": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["src"]
-}
-```
-
-### File: vitest.config.ts
-
-```typescript
-import { defineConfig } from "vitest/config";
-import solidPlugin from "vite-plugin-solid";
-
-export default defineConfig({
-  plugins: [solidPlugin()],
-  test: {
-    environment: "jsdom",
-    globals: true,
-    transformMode: {
-      web: [/\.[jt]sx?$/],
-    },
-  },
-  resolve: {
-    conditions: ["development", "browser"],
-  },
-});
-```
-
-### File: .gitignore
-
-```
-node_modules/
-dist/
-*.local
-.env
-.env.*
-!.env.example
-```
-
-### File: src/index.tsx
-
-```typescript
-import { render } from "solid-js/web";
-import App from "./App";
-
-const root = document.getElementById("root");
-if (!root) throw new Error("Root element not found");
-
-render(() => <App />, root);
-```
-
-### File: src/App.tsx
-
-```typescript
-import { Router, Route } from "@solidjs/router";
-import { lazy } from "solid-js";
-import { AppProvider } from "./context/AppContext";
-
-const Home = lazy(() => import("./pages/Home"));
-const About = lazy(() => import("./pages/About"));
-const NotFound = lazy(() => import("./pages/NotFound"));
-
-export default function App() {
-  return (
-    <AppProvider>
-      <Router>
-        <Route path="/" component={Home} />
-        <Route path="/about" component={About} />
-        <Route path="*404" component={NotFound} />
-      </Router>
-    </AppProvider>
-  );
-}
-```
-
-### File: src/context/AppContext.tsx
-
-```typescript
-import { createContext, useContext, type ParentProps } from "solid-js";
-import { createStore } from "solid-js/store";
-
-interface AppState {
-  user: { name: string; email: string } | null;
-  theme: "light" | "dark";
-}
-
-interface AppActions {
-  setUser: (user: AppState["user"]) => void;
-  toggleTheme: () => void;
-}
-
-const AppContext = createContext<[AppState, AppActions]>();
-
-export function AppProvider(props: ParentProps) {
-  const [state, setState] = createStore<AppState>({
-    user: null,
-    theme: "light",
-  });
-
-  const actions: AppActions = {
-    setUser: (user) => setState("user", user),
-    toggleTheme: () =>
-      setState("theme", (prev) => (prev === "light" ? "dark" : "light")),
-  };
-
-  return (
-    <AppContext.Provider value={[state, actions]}>
-      {props.children}
-    </AppContext.Provider>
-  );
-}
-
-export function useApp(): [AppState, AppActions] {
-  const context = useContext(AppContext);
-  if (!context) throw new Error("useApp must be used within AppProvider");
-  return context;
-}
-```
-
-### File: src/components/Counter.tsx
-
-```typescript
-import { createSignal, type Component } from "solid-js";
-
-const Counter: Component = () => {
-  const [count, setCount] = createSignal(0);
-
-  return (
-    <button type="button" onClick={() => setCount((prev) => prev + 1)}>
-      Count: {count()}
-    </button>
-  );
-};
-
-export default Counter;
-```
-
-### File: src/components/Nav.tsx
-
-```typescript
-import { A } from "@solidjs/router";
-import type { Component } from "solid-js";
-
-const Nav: Component = () => {
-  return (
-    <nav>
-      <A href="/" end>
-        Home
-      </A>
-      <A href="/about">About</A>
-    </nav>
-  );
-};
-
-export default Nav;
-```
-
-### File: src/pages/Home.tsx
-
-```typescript
-import Counter from "../components/Counter";
-import Nav from "../components/Nav";
-
-export default function Home() {
-  return (
-    <main>
-      <Nav />
-      <h1>Home</h1>
-      <Counter />
-    </main>
-  );
-}
-```
-
-### File: src/pages/About.tsx
-
-```typescript
-import Nav from "../components/Nav";
-
-export default function About() {
-  return (
-    <main>
-      <Nav />
-      <h1>About</h1>
-      <p>This is a SolidJS application.</p>
-    </main>
-  );
-}
-```
-
-### File: src/pages/NotFound.tsx
-
-```typescript
-import Nav from "../components/Nav";
-
-export default function NotFound() {
-  return (
-    <main>
-      <Nav />
-      <h1>404 — Not Found</h1>
-      <p>The page you are looking for does not exist.</p>
-    </main>
-  );
-}
-```
-
-### File: src/lib/utils.ts
-
-```typescript
-export function formatDate(date: Date): string {
-  return date.toLocaleDateString("en-US", {
-    year: "numeric",
-    month: "long",
-    day: "numeric",
-  });
-}
-```
-
-### File: test/Counter.test.tsx
-
-```typescript
-import { render, fireEvent, screen } from "@solidjs/testing-library";
-import { describe, it, expect } from "vitest";
-import Counter from "../src/components/Counter";
-
-describe("Counter", () => {
-  it("renders with initial count of 0", () => {
-    render(() => <Counter />);
-    const button = screen.getByRole("button");
-    expect(button).toHaveTextContent("Count: 0");
-  });
-
-  it("increments count on click", async () => {
-    render(() => <Counter />);
-    const button = screen.getByRole("button");
-    fireEvent.click(button);
-    expect(button).toHaveTextContent("Count: 1");
-  });
-});
-```
-
----
-
-## Example 2: Complete SolidStart Project
+## Example 1: Complete SolidStart Project
 
 This is the full file-by-file output for a SolidStart full-stack application with file-based routing, server functions, data loading, and testing.
 
@@ -333,39 +8,81 @@ This is the full file-by-file output for a SolidStart full-stack application wit
 
 ```json
 {
-  "name": "my-solidstart-app",
-  "version": "0.0.0",
-  "private": true,
+  "name": "example-with-prisma",
   "type": "module",
   "scripts": {
-    "dev": "vinxi dev",
-    "build": "vinxi build",
-    "start": "vinxi start",
-    "test": "vitest",
-    "test:run": "vitest run"
-  },
-  "dependencies": {
-    "@solidjs/meta": "^0.29.0",
-    "@solidjs/router": "^0.15.0",
-    "@solidjs/start": "^1.0.0",
-    "solid-js": "^1.9.0"
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite start",
+    "preview": "vite preview"
   },
   "devDependencies": {
-    "@solidjs/testing-library": "^0.8.0",
-    "jsdom": "^24.0.0",
-    "typescript": "^5.4.0",
-    "vinxi": "^0.4.0",
-    "vitest": "^2.0.0"
+    "@types/node": "^24.7.0",
+    "@types/nprogress": "^0.2.3",
+    "@typescript-eslint/eslint-plugin": "^8.59.4",
+    "@typescript-eslint/parser": "^8.59.4",
+    "eslint": "^10.4.0",
+    "eslint-plugin-solid": "^0.14.5",
+    "prettier": "^3.8.3",
+    "prettier-plugin-tailwindcss": "^0.8.0"
+  },
+  "dependencies": {
+    "@prisma/client": "^5.12.1",
+    "@solidjs/meta": "^0.29.4",
+    "@solidjs/router": "^0.15.0",
+    "@solidjs/start": "2.0.0-alpha.2",
+    "@solidjs/vite-plugin-nitro-2": "^0.1.0",
+    "@tailwindcss/vite": "^4.3.0",
+    "lucide-solid": "^1.16.0",
+    "nprogress": "^0.2.0",
+    "prisma": "^5.12.1",
+    "solid-js": "^1.9.5",
+    "tailwindcss": "^4.0.0",
+    "vite": "^7.0.0",
+    "zod": "^4.4.3"
+  },
+  "engines": {
+    "node": ">=22"
   }
 }
+
 ```
 
-### File: app.config.ts
+### File: eslint.config.js
 
-```typescript
-import { defineConfig } from "@solidjs/start/config";
+```javascript
+import tsParser from '@typescript-eslint/parser';
+import tsPlugin from '@typescript-eslint/eslint-plugin';
+import solidPlugin from 'eslint-plugin-solid';
 
-export default defineConfig({});
+/** @type {import("eslint").Linter.Config[]} */
+export default [
+  {
+    ignores: ['node_modules/**', '.solid/**', 'dist/**', 'prisma/migrations/**'],
+  },
+  {
+    files: ['**/*.{ts,tsx}'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 'latest',
+        sourceType: 'module',
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+      solid: solidPlugin,
+    },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      ...solidPlugin.configs.recommended.rules,
+      '@typescript-eslint/no-unused-vars': ['warn', { argsIgnorePattern: '^_' }],
+      '@typescript-eslint/no-explicit-any': 'warn',
+      'no-console': ['warn', { allow: ['warn', 'error'] }],
+    },
+  },
+];
+
 ```
 
 ### File: tsconfig.json
@@ -373,58 +90,79 @@ export default defineConfig({});
 ```json
 {
   "compilerOptions": {
-    "strict": true,
     "target": "ESNext",
     "module": "ESNext",
     "moduleResolution": "bundler",
+    "allowSyntheticDefaultImports": true,
+    "esModuleInterop": true,
     "jsx": "preserve",
     "jsxImportSource": "solid-js",
-    "types": ["vinxi/types/client"],
+    "allowJs": true,
+    "strict": true,
     "noEmit": true,
-    "isolatedModules": true,
-    "esModuleInterop": true,
     "skipLibCheck": true,
+    "types": ["vite/client", "node"],
+    "isolatedModules": true,
     "paths": {
       "~/*": ["./src/*"]
     }
-  },
-  "include": ["src"]
+  }
 }
+
 ```
 
-### File: vitest.config.ts
+### File: vite.config.ts
 
 ```typescript
-import { defineConfig } from "vitest/config";
-import solidPlugin from "vite-plugin-solid";
+import { defineConfig } from 'vite';
+import { nitroV2Plugin as nitro } from '@solidjs/vite-plugin-nitro-2';
+import { solidStart } from '@solidjs/start/config';
+import tailwindcss from '@tailwindcss/vite';
 
 export default defineConfig({
-  plugins: [solidPlugin()],
-  test: {
-    environment: "jsdom",
-    globals: true,
-    transformMode: {
-      web: [/\.[jt]sx?$/],
-    },
-  },
-  resolve: {
-    conditions: ["development", "browser"],
-  },
+  plugins: [
+    tailwindcss(),
+    solidStart({
+      middleware: './src/middleware/security.ts',
+    }),
+    nitro(),
+  ],
+  ssr: { external: ['@prisma/client'] },
 });
+
 ```
 
 ### File: .gitignore
 
 ```
-node_modules/
-dist/
-.output/
-.vinxi/
-.solid/
-*.local
+dist
+.wrangler
+.output
+.vercel
+.netlify
+.vinxi
+app.config.timestamp_*.js
+
+# Environment
 .env
-.env.*
-!.env.example
+.env*.local
+
+# dependencies
+/node_modules
+
+# IDEs and editors
+/.idea
+.project
+.classpath
+*.launch
+.settings/
+
+# Temp
+gitignore
+
+# System Files
+.DS_Store
+Thumbs.db
 ```
 
 ### File: src/app.tsx
@@ -471,6 +209,7 @@ export default createHandler(() => (
         <head>
           <meta charset="utf-8" />
           <meta name="viewport" content="width=device-width, initial-scale=1" />
+          <link rel="icon" href="/favicon.ico" />
           {assets}
         </head>
         <body>
@@ -653,7 +392,7 @@ describe("Counter", () => {
 
 ---
 
-## Example 3: SolidStart with Data Loading and Mutations
+## Example 2: SolidStart with Data Loading and Mutations
 
 ### File: src/routes/todos.tsx
 

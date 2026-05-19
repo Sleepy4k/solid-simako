@@ -26,6 +26,7 @@ metadata:
 | `solid-js` | 2.0 | Beta | Microtask batching, async first-class, `onSettled` replaces `onMount` |
 | `@solidjs/start` | 0.x | Deprecated | Used `createServerData$`, `createServerAction$` — NEVER use for new projects |
 | `@solidjs/start` | 1.0 | Stable | Uses `"use server"` directive, built on Vinxi/Vite/Nitro |
+| `@solidjs/start` | 1.0+ | Stable | Current recommended Solid meta-framework |
 | `@solidjs/router` | < 0.15 | Legacy | Used `cache` function (now deprecated) |
 | `@solidjs/router` | 0.15+ | Stable | Introduced `query` (replaces `cache`), current API |
 
