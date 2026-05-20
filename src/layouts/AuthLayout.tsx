@@ -1,4 +1,4 @@
-import { JSX, Show } from 'solid-js';
+import { For, JSX, Show } from 'solid-js';
 import { Logo } from '~/components/shared/Logo';
 
 interface AuthLayoutProps {
@@ -41,16 +41,18 @@ export function AuthLayout(props: AuthLayoutProps) {
             <p class="text-sm leading-relaxed text-white/80">{props.subline}</p>
           </Show>
           <ul class="space-y-2">
-            {stats().map((s) => (
-              <li class="flex items-center gap-2 text-sm text-white/90">
-                <svg class="size-4 shrink-0" viewBox="0 0 16 16" fill="currentColor">
-                  <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z" />
-                </svg>
-                <span>
-                  <strong>{s.value}</strong> {s.label}
-                </span>
-              </li>
-            ))}
+            <For each={stats()}>
+              {(s) => (
+                <li class="flex items-center gap-2 text-sm text-white/90">
+                  <svg class="size-4 shrink-0" viewBox="0 0 16 16" fill="currentColor">
+                    <path d="M13.78 4.22a.75.75 0 0 1 0 1.06l-7.25 7.25a.75.75 0 0 1-1.06 0L2.22 9.28a.75.75 0 1 1 1.06-1.06L6 10.94l6.72-6.72a.75.75 0 0 1 1.06 0z" />
+                  </svg>
+                  <span>
+                    <strong>{s.value}</strong> {s.label}
+                  </span>
+                </li>
+              )}
+            </For>
           </ul>
         </div>
 

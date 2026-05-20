@@ -1,13 +1,27 @@
-import { Download, TrendingUp, Calendar } from 'lucide-solid';
+import { Download, TrendingUp } from 'lucide-solid';
+import { For } from 'solid-js';
 import { MitraLayout } from '~/layouts/MitraLayout';
 import { SEO } from '~/components/shared/SEO';
 import { Button } from '~/components/ui/Button';
 import { Card, StatCard } from '~/components/ui/Card';
 import { PageHeader } from '~/components/shared/PageHeader';
 
-const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun'];
-const NILAI = [18, 20, 21, 22, 28.4, 0];
 const MAX = 30;
+
+const GRAFIK = [
+  { bulan: 'Jan', nilai: 18, aktif: false },
+  { bulan: 'Feb', nilai: 20, aktif: false },
+  { bulan: 'Mar', nilai: 21, aktif: false },
+  { bulan: 'Apr', nilai: 22, aktif: false },
+  { bulan: 'Mei', nilai: 28.4, aktif: true },
+  { bulan: 'Jun', nilai: 0, aktif: false },
+];
+
+const EKSPOR_ITEMS = [
+  { title: 'Laporan Keuangan', desc: 'Pendapatan, tagihan, rekapitulasi per kamar', format: 'PDF / Excel' },
+  { title: 'Daftar Penyewa', desc: 'Data kontak, periode sewa, status tagihan', format: 'Excel / CSV' },
+  { title: 'Riwayat Transaksi', desc: 'Semua pembayaran masuk & konfirmasi', format: 'PDF / Excel' },
+];
 
 export default function LaporanPage() {
   return (
@@ -54,15 +68,17 @@ export default function LaporanPage() {
           <h2 class="text-sm font-bold text-ink">Tren pendapatan</h2>
         </div>
         <div class="flex h-40 items-end gap-3">
-          {BULAN.map((b, i) => (
-            <div class="flex flex-1 flex-col items-center gap-1">
-              <div
-                class={`w-full rounded-t-lg ${i === 4 ? 'bg-primary' : 'bg-primary/20'}`}
-                style={{ height: NILAI[i] > 0 ? `${(NILAI[i] / MAX) * 100}%` : '4px' }}
-              />
-              <span class="text-[10px] text-slate-400">{b}</span>
-            </div>
-          ))}
+          <For each={GRAFIK}>
+            {(g) => (
+              <div class="flex flex-1 flex-col items-center gap-1">
+                <div
+                  class={`w-full rounded-t-lg ${g.aktif ? 'bg-primary' : 'bg-primary/20'}`}
+                  style={{ height: g.nilai > 0 ? `${(g.nilai / MAX) * 100}%` : '4px' }}
+                />
+                <span class="text-[10px] text-slate-400">{g.bulan}</span>
+              </div>
+            )}
+          </For>
         </div>
       </Card>
 
@@ -70,22 +86,20 @@ export default function LaporanPage() {
       <Card>
         <h2 class="mb-4 text-sm font-bold text-ink">Ekspor laporan</h2>
         <div class="grid gap-3 sm:grid-cols-3">
-          {[
-            { title: 'Laporan Keuangan', desc: 'Pendapatan, tagihan, rekapitulasi per kamar', format: 'PDF / Excel' },
-            { title: 'Daftar Penyewa', desc: 'Data kontak, periode sewa, status tagihan', format: 'Excel / CSV' },
-            { title: 'Riwayat Transaksi', desc: 'Semua pembayaran masuk & konfirmasi', format: 'PDF / Excel' },
-          ].map((item) => (
-            <div class="flex flex-col justify-between rounded-xl border border-slate-100 p-4">
-              <div>
-                <p class="text-sm font-semibold text-ink">{item.title}</p>
-                <p class="mt-1 text-xs text-slate-500">{item.desc}</p>
-                <p class="mt-1 text-[10px] text-slate-400">{item.format}</p>
+          <For each={EKSPOR_ITEMS}>
+            {(item) => (
+              <div class="flex flex-col justify-between rounded-xl border border-slate-100 p-4">
+                <div>
+                  <p class="text-sm font-semibold text-ink">{item.title}</p>
+                  <p class="mt-1 text-xs text-slate-500">{item.desc}</p>
+                  <p class="mt-1 text-[10px] text-slate-400">{item.format}</p>
+                </div>
+                <Button variant="secondary" size="sm" class="mt-3 gap-1.5">
+                  <Download class="size-3.5" /> Unduh
+                </Button>
               </div>
-              <Button variant="secondary" size="sm" class="mt-3 gap-1.5">
-                <Download class="size-3.5" /> Unduh
-              </Button>
-            </div>
-          ))}
+            )}
+          </For>
         </div>
       </Card>
     </MitraLayout>

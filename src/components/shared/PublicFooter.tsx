@@ -1,6 +1,28 @@
 import { A } from '@solidjs/router';
+import { For } from 'solid-js';
 import { Logo } from './Logo';
 import { ROUTES } from '~/constants/routes';
+
+const PENCARI_LINKS = [
+  { href: ROUTES.CARI_KOST, label: 'Cari kost' },
+  { href: '/#kampus', label: 'Kost dekat kampus' },
+  { href: ROUTES.MASUK, label: 'Masuk akun' },
+  { href: ROUTES.DAFTAR, label: 'Daftar gratis' },
+];
+
+const MITRA_LINKS = [
+  { href: ROUTES.DAFTAR_MITRA, label: 'Daftar sebagai mitra' },
+  { href: ROUTES.DASHBOARD_MITRA, label: 'Dashboard mitra' },
+  { href: '/#cara-kerja', label: 'Cara kerja' },
+  { href: '/#biaya', label: 'Biaya & ketentuan' },
+];
+
+const BANTUAN_LINKS = [
+  { href: '/#faq', label: 'FAQ' },
+  { href: ROUTES.CHAT, label: 'Chat support' },
+  { href: '/#kebijakan', label: 'Kebijakan privasi' },
+  { href: '/#syarat', label: 'Syarat & ketentuan' },
+];
 
 export function PublicFooter() {
   return (
@@ -22,21 +44,15 @@ export function PublicFooter() {
               Pencari Kost
             </h4>
             <ul class="space-y-2">
-              {[
-                { href: ROUTES.CARI_KOST, label: 'Cari kost' },
-                { href: '/#kampus', label: 'Kost dekat kampus' },
-                { href: ROUTES.MASUK, label: 'Masuk akun' },
-                { href: ROUTES.DAFTAR, label: 'Daftar gratis' },
-              ].map((l) => (
-                <li>
-                  <A
-                    href={l.href}
-                    class="text-sm text-slate-500 transition hover:text-primary"
-                  >
-                    {l.label}
-                  </A>
-                </li>
-              ))}
+              <For each={PENCARI_LINKS}>
+                {(l) => (
+                  <li>
+                    <A href={l.href} class="text-sm text-slate-500 transition hover:text-primary">
+                      {l.label}
+                    </A>
+                  </li>
+                )}
+              </For>
             </ul>
           </div>
 
@@ -46,21 +62,15 @@ export function PublicFooter() {
               Mitra Owner
             </h4>
             <ul class="space-y-2">
-              {[
-                { href: ROUTES.DAFTAR_MITRA, label: 'Daftar sebagai mitra' },
-                { href: ROUTES.DASHBOARD_MITRA, label: 'Dashboard mitra' },
-                { href: '/#cara-kerja', label: 'Cara kerja' },
-                { href: '/#biaya', label: 'Biaya & ketentuan' },
-              ].map((l) => (
-                <li>
-                  <A
-                    href={l.href}
-                    class="text-sm text-slate-500 transition hover:text-primary"
-                  >
-                    {l.label}
-                  </A>
-                </li>
-              ))}
+              <For each={MITRA_LINKS}>
+                {(l) => (
+                  <li>
+                    <A href={l.href} class="text-sm text-slate-500 transition hover:text-primary">
+                      {l.label}
+                    </A>
+                  </li>
+                )}
+              </For>
             </ul>
           </div>
 
@@ -70,21 +80,15 @@ export function PublicFooter() {
               Bantuan
             </h4>
             <ul class="space-y-2">
-              {[
-                { href: '/#faq', label: 'FAQ' },
-                { href: ROUTES.CHAT, label: 'Chat support' },
-                { href: '/#kebijakan', label: 'Kebijakan privasi' },
-                { href: '/#syarat', label: 'Syarat & ketentuan' },
-              ].map((l) => (
-                <li>
-                  <A
-                    href={l.href}
-                    class="text-sm text-slate-500 transition hover:text-primary"
-                  >
-                    {l.label}
-                  </A>
-                </li>
-              ))}
+              <For each={BANTUAN_LINKS}>
+                {(l) => (
+                  <li>
+                    <A href={l.href} class="text-sm text-slate-500 transition hover:text-primary">
+                      {l.label}
+                    </A>
+                  </li>
+                )}
+              </For>
             </ul>
           </div>
         </div>

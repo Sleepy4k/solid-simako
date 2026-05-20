@@ -1,50 +1,53 @@
-import { A } from '@solidjs/router';
-import { createSignal, Show } from 'solid-js';
+import { A, useSubmission } from '@solidjs/router';
+import { Show } from 'solid-js';
 import { Mail, ArrowLeft, CheckCircle } from 'lucide-solid';
 import { AuthLayout } from '~/layouts/AuthLayout';
 import { SEO } from '~/components/shared/SEO';
 import { Input } from '~/components/ui/Input';
 import { Button } from '~/components/ui/Button';
 import { ROUTES } from '~/constants/routes';
+import { forgotPasswordAction } from '~/server/actions/auth';
 
 export default function LupaSandiPage() {
-  const [loading, setLoading] = createSignal(false);
-  const [sent, setSent] = createSignal(false);
-  const [email, setEmail] = createSignal('');
-
-  function handleSubmit(e: SubmitEvent) {
-    e.preventDefault();
-    setLoading(true);
-    setTimeout(() => { setLoading(false); setSent(true); }, 1200);
-  }
+  const sub = useSubmission(forgotPasswordAction);
+  const success = () => sub.result && 'ok' in sub.result && sub.result.ok;
 
   return (
     <AuthLayout>
       <SEO title="Lupa Kata Sandi" noIndex />
 
-      <A href={ROUTES.MASUK} class="mb-5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-primary">
+      <A
+        href={ROUTES.MASUK}
+        class="mb-5 inline-flex items-center gap-1.5 text-xs font-medium text-slate-500 hover:text-primary"
+      >
         <ArrowLeft class="size-3.5" /> Kembali ke halaman masuk
       </A>
 
       <Show
-        when={sent()}
+        when={success()}
         fallback={
           <>
             <h1 class="mb-1 text-2xl font-bold text-ink">Lupa kata sandi?</h1>
             <p class="mb-6 text-sm text-slate-500">
               Masukkan email akunmu. Kami akan kirim tautan reset kata sandi.
             </p>
-            <form onSubmit={handleSubmit} class="space-y-4">
+
+            <Show when={sub.result && 'ok' in sub.result && !sub.result.ok}>
+              <div class="mb-4 rounded-xl bg-red-50 px-3 py-2 text-sm text-danger">
+                {sub.result && 'message' in sub.result ? sub.result.message : 'Gagal mengirim'}
+              </div>
+            </Show>
+
+            <form action={forgotPasswordAction} method="post" class="space-y-4">
               <Input
+                name="email"
                 label="Email"
                 type="email"
                 placeholder="dewi.ananda@gmail.com"
-                value={email()}
-                onInput={(e) => setEmail(e.currentTarget.value)}
                 prefix={<Mail class="size-4" />}
                 required
               />
-              <Button type="submit" fullWidth size="lg" loading={loading()}>
+              <Button type="submit" fullWidth size="lg" loading={sub.pending}>
                 Kirim tautan reset
               </Button>
             </form>
@@ -58,7 +61,10 @@ export default function LupaSandiPage() {
           <div>
             <h1 class="text-xl font-bold text-ink">Email terkirim!</h1>
             <p class="mt-1 text-sm text-slate-500">
-              Cek kotak masuk <strong>{email()}</strong>. Tautan reset berlaku 15 menit.
+              {sub.result && 'message' in sub.result
+                ? sub.result.message
+                : 'Periksa kotak masuk email kamu.'}{' '}
+              Tautan berlaku 30 menit.
             </p>
           </div>
           <A href={ROUTES.MASUK} class="text-sm font-semibold text-primary hover:underline">

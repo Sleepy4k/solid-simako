@@ -1,15 +1,28 @@
 import { Download, TrendingUp, TrendingDown, Users, Home, DollarSign, AlertCircle } from 'lucide-solid';
+import { For } from 'solid-js';
 import { AdminLayout } from '~/layouts/AdminLayout';
 import { SEO } from '~/components/shared/SEO';
 import { Button } from '~/components/ui/Button';
 import { Card, StatCard } from '~/components/ui/Card';
 import { PageHeader } from '~/components/shared/PageHeader';
 
-const BULAN = ['Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun', 'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'];
-const GMV = [820, 950, 1050, 1100, 1280, 1420, 1380, 1450, 1500, 1600, 1700, 1847];
-const USER_BARU = [240, 310, 280, 350, 420, 390, 410, 460, 480, 510, 530, 560];
 const MAX_GMV = 2000;
 const MAX_USER = 600;
+
+const GRAFIK_GMV = [
+  { bulan: 'Jan', gmv: 820, user: 240 },
+  { bulan: 'Feb', gmv: 950, user: 310 },
+  { bulan: 'Mar', gmv: 1050, user: 280 },
+  { bulan: 'Apr', gmv: 1100, user: 350 },
+  { bulan: 'Mei', gmv: 1280, user: 420 },
+  { bulan: 'Jun', gmv: 1420, user: 390 },
+  { bulan: 'Jul', gmv: 1380, user: 410 },
+  { bulan: 'Agu', gmv: 1450, user: 460 },
+  { bulan: 'Sep', gmv: 1500, user: 480 },
+  { bulan: 'Okt', gmv: 1600, user: 510 },
+  { bulan: 'Nov', gmv: 1700, user: 530 },
+  { bulan: 'Des', gmv: 1847, user: 560 },
+];
 
 const TOP_KOTA = [
   { nama: 'Yogyakarta', properti: 50, pct: 100 },
@@ -17,6 +30,19 @@ const TOP_KOTA = [
   { nama: 'Semarang', properti: 29, pct: 58 },
   { nama: 'Jakarta Selatan', properti: 21, pct: 42 },
   { nama: 'Purwokerto', properti: 14, pct: 28 },
+];
+
+const KOMPOSISI = [
+  { label: 'Penyewa Aktif', value: '12.481', pct: 97.5, color: 'bg-navy' },
+  { label: 'Owner Terverifikasi', value: '312', pct: 2.5, color: 'bg-primary' },
+  { label: 'Tingkat Hunian Rata-rata', value: '77.1%', pct: 77.1, color: 'bg-success' },
+  { label: 'Pembayaran Tepat Waktu', value: '97.2%', pct: 97.2, color: 'bg-success' },
+  { label: 'KYC Disetujui', value: '96.3%', pct: 96.3, color: 'bg-navy' },
+];
+
+const EKSPOR_OPTIONS = [
+  'Laporan GMV', 'Daftar Pengguna', 'Daftar Properti',
+  'Transaksi Lengkap', 'Laporan KYC', 'Laporan Dispute',
 ];
 
 export default function AdminLaporanPage() {
@@ -86,16 +112,18 @@ export default function AdminLaporanPage() {
             </div>
           </div>
           <div class="flex h-40 items-end gap-1">
-            {BULAN.map((b, i) => (
-              <div class="flex flex-1 flex-col items-center gap-0.5">
-                <span class="text-[9px] text-slate-400">{GMV[i]}</span>
-                <div
-                  class="w-full rounded-t-sm bg-primary/30 transition-all hover:bg-primary/50"
-                  style={{ height: `${(GMV[i] / MAX_GMV) * 100}%` }}
-                />
-                <span class="text-[9px] text-slate-400">{b}</span>
-              </div>
-            ))}
+            <For each={GRAFIK_GMV}>
+              {(g) => (
+                <div class="flex flex-1 flex-col items-center gap-0.5">
+                  <span class="text-[9px] text-slate-400">{g.gmv}</span>
+                  <div
+                    class="w-full rounded-t-sm bg-primary/30 transition-all hover:bg-primary/50"
+                    style={{ height: `${(g.gmv / MAX_GMV) * 100}%` }}
+                  />
+                  <span class="text-[9px] text-slate-400">{g.bulan}</span>
+                </div>
+              )}
+            </For>
           </div>
         </Card>
 
@@ -111,15 +139,17 @@ export default function AdminLaporanPage() {
             </div>
           </div>
           <div class="flex h-40 items-end gap-1">
-            {BULAN.map((b, i) => (
-              <div class="flex flex-1 flex-col items-center gap-0.5">
-                <div
-                  class="w-full rounded-t-sm bg-navy/20 transition-all hover:bg-navy/40"
-                  style={{ height: `${(USER_BARU[i] / MAX_USER) * 100}%` }}
-                />
-                <span class="text-[9px] text-slate-400">{b}</span>
-              </div>
-            ))}
+            <For each={GRAFIK_GMV}>
+              {(g) => (
+                <div class="flex flex-1 flex-col items-center gap-0.5">
+                  <div
+                    class="w-full rounded-t-sm bg-navy/20 transition-all hover:bg-navy/40"
+                    style={{ height: `${(g.user / MAX_USER) * 100}%` }}
+                  />
+                  <span class="text-[9px] text-slate-400">{g.bulan}</span>
+                </div>
+              )}
+            </For>
           </div>
         </Card>
 
@@ -127,20 +157,22 @@ export default function AdminLaporanPage() {
         <Card>
           <h2 class="mb-4 text-sm font-bold text-ink">Properti per Kota</h2>
           <div class="space-y-3">
-            {TOP_KOTA.map((k, i) => (
-              <div>
-                <div class="mb-1 flex items-center justify-between text-xs">
-                  <span class="flex items-center gap-1.5">
-                    <span class="font-mono text-[10px] text-slate-400">#{i + 1}</span>
-                    <span class="font-medium text-ink">{k.nama}</span>
-                  </span>
-                  <span class="text-slate-500">{k.properti} properti</span>
+            <For each={TOP_KOTA}>
+              {(k, i) => (
+                <div>
+                  <div class="mb-1 flex items-center justify-between text-xs">
+                    <span class="flex items-center gap-1.5">
+                      <span class="font-mono text-[10px] text-slate-400">#{i() + 1}</span>
+                      <span class="font-medium text-ink">{k.nama}</span>
+                    </span>
+                    <span class="text-slate-500">{k.properti} properti</span>
+                  </div>
+                  <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <div class="h-full rounded-full bg-primary/60" style={{ width: `${k.pct}%` }} />
+                  </div>
                 </div>
-                <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div class="h-full rounded-full bg-primary/60" style={{ width: `${k.pct}%` }} />
-                </div>
-              </div>
-            ))}
+              )}
+            </For>
           </div>
         </Card>
 
@@ -148,23 +180,19 @@ export default function AdminLaporanPage() {
         <Card>
           <h2 class="mb-4 text-sm font-bold text-ink">Komposisi Platform</h2>
           <div class="space-y-4">
-            {[
-              { label: 'Penyewa Aktif', value: '12.481', pct: 97.5, color: 'bg-navy' },
-              { label: 'Owner Terverifikasi', value: '312', pct: 2.5, color: 'bg-primary' },
-              { label: 'Tingkat Hunian Rata-rata', value: '77.1%', pct: 77.1, color: 'bg-success' },
-              { label: 'Pembayaran Tepat Waktu', value: '97.2%', pct: 97.2, color: 'bg-success' },
-              { label: 'KYC Disetujui', value: '96.3%', pct: 96.3, color: 'bg-navy' },
-            ].map((m) => (
-              <div>
-                <div class="mb-1 flex justify-between text-xs">
-                  <span class="text-slate-500">{m.label}</span>
-                  <span class="font-semibold text-ink">{m.value}</span>
+            <For each={KOMPOSISI}>
+              {(m) => (
+                <div>
+                  <div class="mb-1 flex justify-between text-xs">
+                    <span class="text-slate-500">{m.label}</span>
+                    <span class="font-semibold text-ink">{m.value}</span>
+                  </div>
+                  <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
+                    <div class={`h-full rounded-full ${m.color} opacity-60`} style={{ width: `${m.pct}%` }} />
+                  </div>
                 </div>
-                <div class="h-1.5 overflow-hidden rounded-full bg-slate-100">
-                  <div class={`h-full rounded-full ${m.color} opacity-60`} style={{ width: `${m.pct}%` }} />
-                </div>
-              </div>
-            ))}
+              )}
+            </For>
           </div>
         </Card>
       </div>
@@ -173,14 +201,16 @@ export default function AdminLaporanPage() {
       <Card class="mt-6">
         <h2 class="mb-3 text-sm font-bold text-ink">Ekspor Laporan</h2>
         <div class="grid grid-cols-3 gap-3 sm:grid-cols-4">
-          {['Laporan GMV', 'Daftar Pengguna', 'Daftar Properti', 'Transaksi Lengkap', 'Laporan KYC', 'Laporan Dispute'].map((r) => (
-            <button
-              type="button"
-              class="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-left text-xs font-medium text-ink transition hover:border-primary/30 hover:bg-primary-light/20"
-            >
-              <Download class="size-3.5 text-primary" /> {r}
-            </button>
-          ))}
+          <For each={EKSPOR_OPTIONS}>
+            {(r) => (
+              <button
+                type="button"
+                class="flex items-center gap-2 rounded-xl border border-slate-100 bg-slate-50 p-3 text-left text-xs font-medium text-ink transition hover:border-primary/30 hover:bg-primary-light/20"
+              >
+                <Download class="size-3.5 text-primary" /> {r}
+              </button>
+            )}
+          </For>
         </div>
       </Card>
     </AdminLayout>

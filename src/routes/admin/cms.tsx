@@ -94,9 +94,11 @@ export default function CmsPage() {
           <table class="w-full text-sm">
             <thead class="border-b border-slate-100">
               <tr>
-                {['ID', 'JUDUL', 'TARGET', 'PERIODE', 'KLIK', 'STATUS', 'AKSI'].map((h) => (
-                  <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-400">{h}</th>
-                ))}
+                <For each={['ID', 'JUDUL', 'TARGET', 'PERIODE', 'KLIK', 'STATUS', 'AKSI']}>
+                  {(h) => (
+                    <th class="px-4 py-3 text-left text-[10px] font-semibold uppercase tracking-wide text-slate-400">{h}</th>
+                  )}
+                </For>
               </tr>
             </thead>
             <tbody>

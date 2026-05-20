@@ -1,275 +1,438 @@
-import { useParams } from '@solidjs/router';
-import { createSignal, createEffect, onCleanup, Show } from 'solid-js';
-import { Calendar, Info, Copy, CheckCircle, Upload, X, FileText } from 'lucide-solid';
+import {
+  useParams,
+  useSearchParams,
+  createAsync,
+  useSubmission,
+  type RouteDefinition,
+  A,
+} from '@solidjs/router';
+import { createSignal, For, Show, Suspense } from 'solid-js';
+import { Calendar, Info, Copy, CheckCircle, Upload } from 'lucide-solid';
 import { PublicLayout } from '~/layouts/PublicLayout';
 import { SEO } from '~/components/shared/SEO';
-import { Button } from '~/components/ui/Button';
+import { Button, ButtonLink } from '~/components/ui/Button';
 import { Card } from '~/components/ui/Card';
 import { Badge } from '~/components/ui/Badge';
+import { EmptyState } from '~/components/ui/EmptyState';
+import { Skeleton } from '~/components/ui/Skeleton';
+import { ROUTES } from '~/constants/routes';
+import { kostDetailQuery } from '~/server/actions/public';
+import { currentUserQuery } from '~/server/actions/auth';
+import {
+  createBookingAction,
+  uploadProofAction,
+  userTransactionsQuery,
+} from '~/server/actions/penyewa';
+import { prisma } from '~/server/db';
+import { query } from '@solidjs/router';
+import { formatIDR } from '~/lib/shared/slug';
 
-const STEPS = ['Pilih kamar', 'Detail penyewa', 'Pembayaran manual', 'Selesai'];
 const DURASI_OPTIONS = [1, 3, 6, 12];
 
-function formatRp(n: number) {
-  return new Intl.NumberFormat('id-ID', {
-    style: 'currency', currency: 'IDR', maximumFractionDigits: 0,
-  }).format(n).replace('IDR', 'Rp');
-}
+// Inline server query: room dengan kost & owner (untuk halaman ini saja)
+const roomCheckoutQuery = query(async (roomId: string) => {
+  'use server';
+  const room = await prisma.room.findUnique({
+    where: { id: roomId },
+    include: {
+      boardingHouse: {
+        select: {
+          id: true,
+          nama: true,
+          slug: true,
+          kota: true,
+          alamat: true,
+          owner: {
+            select: {
+              email: true,
+              profile: { select: { namaLengkap: true } },
+              ownerProfile: {
+                select: { namaBank: true, rekeningNo: true, rekeningNama: true },
+              },
+            },
+          },
+          images: {
+            where: { isCover: true },
+            take: 1,
+            include: { asset: { select: { url: true } } },
+          },
+        },
+      },
+    },
+  });
+  return room;
+}, 'roomCheckout');
 
-function CountdownTimer(props: { seconds: number }) {
-  const [remaining, setRemaining] = createSignal(props.seconds);
+const transactionByIdQuery = query(async (trxId: string) => {
+  'use server';
+  return prisma.transaction.findUnique({
+    where: { id: trxId },
+    include: {
+      rental: { include: { room: { include: { boardingHouse: { select: { owner: { select: { ownerProfile: true } } } } } } } },
+      buktiAsset: { select: { url: true } },
+    },
+  });
+}, 'transactionById');
 
-  const timer = setInterval(() => {
-    setRemaining((v) => Math.max(0, v - 1));
-  }, 1000);
-  onCleanup(() => clearInterval(timer));
-
-  const hh = () => String(Math.floor(remaining() / 3600)).padStart(2, '0');
-  const mm = () => String(Math.floor((remaining() % 3600) / 60)).padStart(2, '0');
-  const ss = () => String(remaining() % 60).padStart(2, '0');
-
-  return (
-    <span class="font-mono font-bold text-ink">{hh()}:{mm()}:{ss()}</span>
-  );
-}
+export const route = {
+  preload({ params, location }) {
+    if (params.roomId) roomCheckoutQuery(params.roomId);
+    currentUserQuery();
+    const trxId = new URLSearchParams(location.search).get('trx');
+    if (trxId) transactionByIdQuery(trxId);
+  },
+} satisfies RouteDefinition;
 
 export default function CheckoutPage() {
   const params = useParams<{ roomId: string }>();
-  const [step] = createSignal(2); // 0-indexed, show step 3 (Pembayaran)
+  const [search] = useSearchParams();
+  const trxId = () => (typeof search.trx === 'string' ? search.trx : undefined);
+
+  const room = createAsync(() => roomCheckoutQuery(params.roomId));
+  const user = createAsync(() => currentUserQuery());
+  const trx = createAsync(() => (trxId() ? transactionByIdQuery(trxId()!) : Promise.resolve(null)));
+
   const [durasi, setDurasi] = createSignal(6);
+  const [tanggalMulai, setTanggalMulai] = createSignal(
+    new Date().toISOString().slice(0, 10),
+  );
   const [copied, setCopied] = createSignal(false);
-  const [file, setFile] = createSignal<File | null>(null);
+  const [proofFile, setProofFile] = createSignal<File | null>(null);
 
-  const hargaBulan = 950000;
-  const deposit = 500000;
-  const biayaAdmin = 12000;
-  const kodeUnik = 347;
-  const totalSewa = () => hargaBulan * durasi();
-  const total = () => totalSewa() + deposit + biayaAdmin + kodeUnik;
+  const bookSub = useSubmission(createBookingAction);
+  const proofSub = useSubmission(uploadProofAction);
 
-  function copyRekening() {
-    navigator.clipboard.writeText('2810447791');
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
-  }
+  const total = () => (room()?.hargaBulan ?? 0) * durasi();
 
-  function handleFileChange(e: Event) {
-    const input = e.currentTarget as HTMLInputElement;
-    if (input.files?.[0]) setFile(input.files[0]);
+  function copyRekening(text: string) {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(text);
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1500);
+    }
   }
 
   return (
-    <PublicLayout hideFooter>
-      <SEO title="Checkout — Kost Putri Bunga Anggrek" noIndex />
+    <PublicLayout>
+      <SEO title="Ajukan Sewa" noIndex />
 
       <div class="mx-auto max-w-5xl px-4 py-8 lg:px-8">
-        {/* Stepper */}
-        <div class="mb-8 flex items-center justify-center gap-0">
-          {STEPS.map((label, i) => (
-            <>
-              <div class="flex items-center gap-2">
-                <div
-                  class={[
-                    'flex size-7 items-center justify-center rounded-full text-xs font-bold',
-                    i < step()
-                      ? 'bg-success text-white'
-                      : i === step()
-                        ? 'bg-primary text-white'
-                        : 'bg-slate-200 text-slate-400',
-                  ].join(' ')}
-                >
-                  {i < step() ? <CheckCircle class="size-4" /> : i + 1}
-                </div>
-                <span
-                  class={[
-                    'hidden text-sm font-medium sm:block',
-                    i === step() ? 'text-ink' : 'text-slate-400',
-                  ].join(' ')}
-                >
-                  {label}
-                </span>
-              </div>
-              {i < STEPS.length - 1 && (
-                <div class={`mx-3 h-0.5 w-12 ${i < step() ? 'bg-success' : 'bg-slate-200'}`} />
-              )}
-            </>
-          ))}
-        </div>
-
-        <div class="grid gap-8 lg:grid-cols-[1fr_300px]">
-          {/* Left */}
-          <div class="space-y-6">
-            {/* Tanggal & Durasi */}
-            <Card>
-              <h2 class="mb-4 text-base font-bold text-ink">Tanggal & Durasi</h2>
-              <div class="grid gap-4 sm:grid-cols-2">
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-slate-600">Tanggal masuk</label>
-                  <div class="flex items-center gap-2 rounded-xl border border-slate-200 px-4 py-2.5 text-sm">
-                    <Calendar class="size-4 text-slate-400" />
-                    <span>1 Juli 2026</span>
-                  </div>
-                </div>
-                <div>
-                  <label class="mb-1.5 block text-sm font-medium text-slate-600">Durasi sewa</label>
-                  <div class="flex gap-2">
-                    {DURASI_OPTIONS.map((d) => (
-                      <button
-                        type="button"
-                        onClick={() => setDurasi(d)}
-                        class={[
-                          'flex-1 rounded-xl border py-2 text-sm font-semibold transition',
-                          durasi() === d
-                            ? 'border-primary bg-primary text-white'
-                            : 'border-slate-200 text-slate-600 hover:border-primary hover:text-primary',
-                        ].join(' ')}
-                      >
-                        {d} bln
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            </Card>
-
-            {/* Transfer info */}
-            <Card class="border-slate-200 bg-slate-50">
-              <div class="mb-3 flex items-start gap-2 text-sm text-slate-600">
-                <Info class="mt-0.5 size-4 shrink-0 text-primary" />
-                <span>
-                  <strong>Transfer ke rekening Owner</strong> · SIMAKO tidak menampung dana.
-                  Silakan transfer langsung. Bukti akan diverifikasi.
-                </span>
-              </div>
-
-              {/* Bank detail */}
-              <div class="rounded-xl border border-slate-200 bg-white p-4">
-                <div class="flex items-center justify-between">
-                  <div>
-                    <div class="mb-1 inline-flex rounded-lg bg-navy px-2 py-1 text-[10px] font-bold text-white tracking-wide">
-                      BCA
-                    </div>
-                    <p class="text-xl font-bold tracking-wider text-ink">2810 4477 91</p>
-                    <p class="text-xs text-slate-500">a/n Slamet Riyadi (Owner)</p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={copyRekening}
-                    class={[
-                      'flex items-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-medium transition',
-                      copied()
-                        ? 'border-success bg-success-light text-success'
-                        : 'border-slate-200 text-slate-600 hover:border-primary hover:text-primary',
-                    ].join(' ')}
-                  >
-                    {copied() ? <CheckCircle class="size-4" /> : <Copy class="size-4" />}
-                    {copied() ? 'Tersalin' : 'Salin'}
-                  </button>
-                </div>
-              </div>
-
-              {/* Nominal & countdown */}
-              <div class="mt-3 grid gap-3 sm:grid-cols-2">
-                <div class="rounded-xl border border-slate-100 bg-white p-3">
-                  <p class="mb-1 text-xs text-slate-500">Nominal transfer</p>
-                  <p class="text-lg font-bold text-primary">{formatRp(total())}</p>
-                  <p class="text-[10px] text-slate-400">3 angka unik agar mudah diverifikasi</p>
-                </div>
-                <div class="rounded-xl border border-slate-100 bg-white p-3">
-                  <p class="mb-1 text-xs text-slate-500">Batas pembayaran</p>
-                  <p class="text-lg font-bold text-ink">
-                    <CountdownTimer seconds={85321} />
-                  </p>
-                  <p class="text-[10px] text-slate-400">Hari ini, sebelum 18.30 WIB</p>
-                </div>
-              </div>
-            </Card>
-
-            {/* Upload bukti */}
-            <Card>
-              <h2 class="mb-1 text-base font-bold text-ink">Upload Bukti Transfer</h2>
-              <p class="mb-4 text-xs text-slate-500">JPG / PNG / PDF · maks 5 MB</p>
-
-              <Show
-                when={file()}
-                fallback={
-                  <label class="flex cursor-pointer flex-col items-center gap-3 rounded-2xl border-2 border-dashed border-slate-200 p-8 transition hover:border-primary hover:bg-primary-light/30">
-                    <Upload class="size-8 text-slate-400" />
-                    <div class="text-center">
-                      <p class="text-sm font-medium text-ink">Klik untuk upload atau seret file ke sini</p>
-                      <p class="text-xs text-slate-400">JPG, PNG, atau PDF</p>
-                    </div>
-                    <input type="file" class="sr-only" accept="image/*,.pdf" onChange={handleFileChange} />
-                  </label>
-                }
-              >
-                {(f) => (
-                  <div class="flex items-center gap-3 rounded-2xl border border-success/30 bg-success-light p-4">
-                    <FileText class="size-8 text-success" />
-                    <div class="flex-1 min-w-0">
-                      <p class="truncate text-sm font-semibold text-ink">{f().name}</p>
-                      <p class="text-xs text-slate-500">
-                        {(f().size / 1024 / 1024).toFixed(1)} MB · Berhasil diunggah
-                      </p>
-                    </div>
-                    <div class="flex gap-2">
-                      <button type="button" class="text-xs font-medium text-primary hover:underline">Lihat</button>
-                      <button
-                        type="button"
-                        onClick={() => setFile(null)}
-                        class="text-slate-400 hover:text-danger"
-                      >
-                        <X class="size-4" />
-                      </button>
-                    </div>
-                  </div>
-                )}
-              </Show>
-            </Card>
-
-            <Button fullWidth size="lg" disabled={!file()}>
-              Kirim untuk Verifikasi
-            </Button>
-          </div>
-
-          {/* Right: Ringkasan */}
-          <div class="lg:sticky lg:top-20 lg:self-start">
-            <Card>
-              <h3 class="mb-4 text-sm font-bold text-ink">Ringkasan</h3>
-
-              <div class="mb-4 flex items-center gap-3">
-                <div class="size-14 flex-shrink-0 overflow-hidden rounded-xl bg-gradient-to-br from-primary-light to-red-100" />
-                <div>
-                  <p class="text-sm font-semibold text-ink">Kost Bunga Anggrek</p>
-                  <p class="text-xs text-slate-500">Kamar 04 · Tipe A</p>
-                  <Badge variant="info">{durasi()} bulan</Badge>
-                </div>
-              </div>
-
-              <div class="space-y-2 border-t border-slate-100 pt-3 text-sm">
-                {[
-                  { label: `Sewa ${durasi()} × ${formatRp(hargaBulan)}`, value: formatRp(totalSewa()) },
-                  { label: 'Deposit', value: formatRp(deposit) },
-                  { label: 'Biaya admin', value: formatRp(biayaAdmin) },
-                  { label: 'Kode unik', value: `+${kodeUnik}` },
-                ].map((row) => (
-                  <div class="flex justify-between">
-                    <span class="text-slate-500">{row.label}</span>
-                    <span class="font-medium text-ink">{row.value}</span>
-                  </div>
-                ))}
-                <div class="flex justify-between border-t border-slate-100 pt-2 text-base">
-                  <span class="font-bold text-ink">Total</span>
-                  <span class="font-bold text-primary">{formatRp(total())}</span>
-                </div>
-              </div>
-
-              <p class="mt-3 text-center text-[10px] text-slate-400">
-                Owner akan memverifikasi dalam 1×24 jam
+        <Suspense fallback={<Skeleton class="h-96" />}>
+          <Show when={!user()}>
+            <div class="rounded-2xl border border-amber-200 bg-amber-50 p-6">
+              <p class="font-semibold text-amber-800">Anda belum masuk</p>
+              <p class="mt-1 text-sm text-amber-700">
+                Silakan masuk atau daftar dulu untuk mengajukan sewa.
               </p>
-            </Card>
-          </div>
-        </div>
+              <div class="mt-3 flex gap-2">
+                <ButtonLink
+                  href={`${ROUTES.MASUK}?redirect=${encodeURIComponent(ROUTES.CHECKOUT(params.roomId))}`}
+                >
+                  Masuk
+                </ButtonLink>
+                <ButtonLink href={ROUTES.DAFTAR_PENYEWA} variant="secondary">
+                  Daftar
+                </ButtonLink>
+              </div>
+            </div>
+          </Show>
+
+          <Show
+            when={room()}
+            fallback={
+              <EmptyState
+                title="Kamar tidak ditemukan"
+                description="Kamar yang kamu pilih mungkin sudah tidak tersedia."
+                action={<ButtonLink href={ROUTES.CARI_KOST}>Cari kamar lain</ButtonLink>}
+              />
+            }
+          >
+            {(r) => {
+              const bank = () => r().boardingHouse.owner.ownerProfile;
+              return (
+                <div class="grid gap-6 lg:grid-cols-[1fr_320px]">
+                  {/* Main */}
+                  <div class="space-y-6">
+                    {/* Step 1: Booking form */}
+                    <Show when={!trxId()}>
+                      <Card>
+                        <h2 class="mb-3 text-sm font-bold text-ink">1. Pilih durasi & tanggal masuk</h2>
+                        <Show when={bookSub.result && 'ok' in bookSub.result && !bookSub.result.ok}>
+                          <div class="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-danger">
+                            {bookSub.result && 'message' in bookSub.result
+                              ? bookSub.result.message
+                              : 'Pengajuan gagal'}
+                          </div>
+                        </Show>
+                        <form action={createBookingAction} method="post" class="space-y-4">
+                          <input type="hidden" name="roomId" value={r().id} />
+
+                          <div>
+                            <label class="mb-2 block text-xs font-semibold text-slate-500">
+                              Durasi sewa
+                            </label>
+                            <div class="grid grid-cols-4 gap-2">
+                              <For each={DURASI_OPTIONS}>
+                                {(d) => (
+                                  <label
+                                    class={[
+                                      'cursor-pointer rounded-xl border-2 p-3 text-center text-sm font-medium transition',
+                                      durasi() === d
+                                        ? 'border-primary bg-primary-light text-primary'
+                                        : 'border-slate-200 text-slate-600 hover:border-primary/40',
+                                    ].join(' ')}
+                                  >
+                                    <input
+                                      type="radio"
+                                      name="durasiBulan"
+                                      value={d}
+                                      checked={durasi() === d}
+                                      onChange={() => setDurasi(d)}
+                                      class="sr-only"
+                                    />
+                                    {d} bln
+                                  </label>
+                                )}
+                              </For>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-500">
+                              Tanggal masuk
+                            </label>
+                            <input
+                              type="date"
+                              name="tanggalMulai"
+                              value={tanggalMulai()}
+                              onInput={(e) => setTanggalMulai(e.currentTarget.value)}
+                              min={new Date().toISOString().slice(0, 10)}
+                              required
+                              class="h-10 w-full rounded-xl border border-slate-200 px-3 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+
+                          <div>
+                            <label class="mb-1 block text-xs font-semibold text-slate-500">
+                              Catatan untuk owner (opsional)
+                            </label>
+                            <textarea
+                              name="catatan"
+                              rows={2}
+                              placeholder="Misal: rencana masuk siang hari"
+                              class="w-full resize-none rounded-xl border border-slate-200 p-2.5 text-sm focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
+                            />
+                          </div>
+
+                          <Button
+                            type="submit"
+                            fullWidth
+                            size="lg"
+                            loading={bookSub.pending}
+                            disabled={!user()}
+                          >
+                            Buat Pengajuan & Lanjut Bayar
+                          </Button>
+                        </form>
+                      </Card>
+                    </Show>
+
+                    {/* Step 2: Payment */}
+                    <Show when={trxId() && trx()}>
+                      <Card>
+                        <div class="mb-2 flex items-center gap-2">
+                          <Badge variant="menunggu" dot>Menunggu bukti transfer</Badge>
+                          <span class="text-xs text-slate-400">
+                            Batas: {trx()?.batasTransfer
+                              ? new Date(trx()!.batasTransfer!).toLocaleString('id-ID')
+                              : '—'}
+                          </span>
+                        </div>
+                        <h2 class="mb-3 text-sm font-bold text-ink">2. Transfer ke rekening owner</h2>
+
+                        <Show
+                          when={bank()?.namaBank && bank()?.rekeningNo}
+                          fallback={
+                            <div class="rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
+                              Owner belum menyetel rekening bank. Hubungi owner via chat.
+                            </div>
+                          }
+                        >
+                          <div class="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm">
+                            <div class="flex items-center justify-between">
+                              <span class="text-slate-500">Bank</span>
+                              <span class="font-semibold">{bank()!.namaBank}</span>
+                            </div>
+                            <div class="flex items-center justify-between">
+                              <span class="text-slate-500">No. Rekening</span>
+                              <div class="flex items-center gap-2">
+                                <span class="font-mono font-bold">{bank()!.rekeningNo}</span>
+                                <button
+                                  type="button"
+                                  onClick={() => copyRekening(bank()!.rekeningNo!)}
+                                  class="rounded bg-white px-2 py-0.5 text-[10px] text-slate-600 hover:text-primary"
+                                >
+                                  {copied() ? (
+                                    <>
+                                      <CheckCircle class="inline size-3" /> Tersalin
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Copy class="inline size-3" /> Salin
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                            <div class="flex items-center justify-between">
+                              <span class="text-slate-500">Atas nama</span>
+                              <span class="font-semibold">{bank()!.rekeningNama}</span>
+                            </div>
+                            <div class="flex items-center justify-between border-t border-slate-200 pt-2">
+                              <span class="text-slate-500">Jumlah transfer</span>
+                              <span class="text-lg font-bold text-primary">
+                                {formatIDR(trx()!.nominal)}
+                              </span>
+                            </div>
+                          </div>
+                        </Show>
+
+                        <div class="mt-4 flex items-start gap-2 rounded-xl bg-amber-50 p-3 text-xs text-amber-800">
+                          <Info class="mt-0.5 size-3.5 shrink-0" />
+                          <span>
+                            Transfer sesuai jumlah persis. Setelah transfer, unggah bukti di
+                            bawah agar owner dapat memverifikasi.
+                          </span>
+                        </div>
+                      </Card>
+
+                      <Card>
+                        <h2 class="mb-3 text-sm font-bold text-ink">3. Unggah bukti transfer</h2>
+                        <Show when={proofSub.result && 'ok' in proofSub.result && !proofSub.result.ok}>
+                          <div class="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-danger">
+                            {proofSub.result && 'message' in proofSub.result
+                              ? proofSub.result.message
+                              : 'Upload gagal'}
+                          </div>
+                        </Show>
+                        <form
+                          action={uploadProofAction}
+                          method="post"
+                          enctype="multipart/form-data"
+                          class="space-y-3"
+                        >
+                          <input type="hidden" name="transactionId" value={trxId()!} />
+
+                          <label class="block">
+                            <span class="mb-1 block text-xs font-semibold text-slate-500">
+                              Bukti transfer (JPG/PNG/PDF)
+                            </span>
+                            <div
+                              class={[
+                                'flex aspect-[16/8] cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed p-4 transition',
+                                proofFile()
+                                  ? 'border-primary/40 bg-primary-light/30'
+                                  : 'border-slate-200 hover:border-primary/30',
+                              ].join(' ')}
+                            >
+                              <div class="text-center">
+                                <Upload class="mx-auto size-6 text-slate-400" />
+                                <p class="mt-1 text-sm font-medium text-slate-600">
+                                  {proofFile()
+                                    ? `${proofFile()!.name} (${(proofFile()!.size / 1024 / 1024).toFixed(2)} MB)`
+                                    : 'Klik untuk pilih file'}
+                                </p>
+                                <p class="text-[10px] text-slate-400">Maks 5MB</p>
+                              </div>
+                              <input
+                                type="file"
+                                name="file"
+                                accept="image/*,application/pdf"
+                                class="sr-only"
+                                onChange={(e) => {
+                                  const f = e.currentTarget.files?.[0];
+                                  if (f) setProofFile(f);
+                                }}
+                              />
+                            </div>
+                          </label>
+
+                          <div class="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              name="namaBank"
+                              placeholder="Bank pengirim (opsional)"
+                              class="h-9 rounded-xl border border-slate-200 px-3 text-sm focus:border-primary focus:outline-none"
+                            />
+                            <input
+                              type="text"
+                              name="nomorReferensi"
+                              placeholder="No. referensi (opsional)"
+                              class="h-9 rounded-xl border border-slate-200 px-3 text-sm focus:border-primary focus:outline-none"
+                            />
+                          </div>
+
+                          <Button
+                            type="submit"
+                            fullWidth
+                            loading={proofSub.pending}
+                            disabled={!proofFile()}
+                          >
+                            Kirim Bukti Transfer
+                          </Button>
+                        </form>
+                      </Card>
+                    </Show>
+                  </div>
+
+                  {/* Sidebar: ringkasan */}
+                  <div class="lg:sticky lg:top-20 lg:self-start">
+                    <Card>
+                      <p class="text-xs font-semibold uppercase tracking-wide text-slate-400">
+                        Ringkasan
+                      </p>
+                      <div class="mt-3 aspect-video overflow-hidden rounded-xl bg-slate-100">
+                        <Show when={r().boardingHouse.images[0]}>
+                          <img
+                            src={r().boardingHouse.images[0].asset.url}
+                            class="size-full object-cover"
+                            alt={r().boardingHouse.nama}
+                          />
+                        </Show>
+                      </div>
+                      <p class="mt-3 text-sm font-bold text-ink">{r().boardingHouse.nama}</p>
+                      <p class="text-xs text-slate-500">
+                        Kamar {r().nomorKamar} · {r().boardingHouse.kota}
+                      </p>
+
+                      <div class="mt-4 space-y-1.5 border-t border-slate-100 pt-3 text-xs">
+                        <div class="flex justify-between">
+                          <span class="text-slate-500">Harga/bulan</span>
+                          <span class="font-semibold">{formatIDR(r().hargaBulan)}</span>
+                        </div>
+                        <div class="flex justify-between">
+                          <span class="text-slate-500">Durasi</span>
+                          <span class="font-semibold">{durasi()} bulan</span>
+                        </div>
+                        <div class="flex justify-between border-t border-slate-100 pt-2 text-sm">
+                          <span class="font-semibold text-ink">Total</span>
+                          <span class="font-bold text-primary">{formatIDR(total())}</span>
+                        </div>
+                      </div>
+
+                      <A
+                        href={ROUTES.DETAIL_KOST(r().boardingHouse.slug)}
+                        class="mt-3 block text-center text-xs text-primary hover:underline"
+                      >
+                        ← Kembali ke detail kost
+                      </A>
+                    </Card>
+                  </div>
+                </div>
+              );
+            }}
+          </Show>
+        </Suspense>
       </div>
     </PublicLayout>
   );

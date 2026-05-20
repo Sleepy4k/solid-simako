@@ -8,10 +8,28 @@ export const ROUTES = {
   // Auth
   MASUK: '/masuk',
   DAFTAR: '/daftar',
+  DAFTAR_PENYEWA: '/daftar/penyewa',
   DAFTAR_MITRA: '/daftar/mitra',
   LUPA_SANDI: '/lupa-sandi',
+  RESET_SANDI: '/reset-sandi',
   VERIFIKASI_OTP: '/verifikasi-otp',
   UPLOAD_KYC: '/upload-kyc',
+
+  // Public static
+  TENTANG: '/tentang',
+  KONTAK: '/kontak',
+  SYARAT: '/syarat',
+  PRIVASI: '/privasi',
+  UNTUK_MITRA: '/untuk-mitra',
+  FAQ_PUBLIC: '/faq',
+  BLOG: '/blog',
+  BLOG_DETAIL: (slug: string) => `/blog/${slug}`,
+  PUSAT_BANTUAN: '/pusat-bantuan',
+
+  // Tenant extras
+  RIWAYAT_PENGAJUAN: '/akun/pengajuan',
+  TAGIHAN_PENYEWA: '/akun/tagihan',
+  ULASAN: '/akun/ulasan',
 
   // Tenant dashboard
   DASHBOARD_PENYEWA: '/akun',

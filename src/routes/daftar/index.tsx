@@ -1,4 +1,5 @@
 import { A } from '@solidjs/router';
+import { For } from 'solid-js';
 import { Building2, User } from 'lucide-solid';
 import { AuthLayout } from '~/layouts/AuthLayout';
 import { SEO } from '~/components/shared/SEO';
@@ -7,7 +8,7 @@ import { ROUTES } from '~/constants/routes';
 
 const ROLES = [
   {
-    href: ROUTES.DAFTAR,
+    href: ROUTES.DAFTAR_PENYEWA,
     title: 'Daftar sebagai pencari kost',
     desc: 'Cari, simpan, dan booking kost favoritmu. Gratis selamanya.',
     icon: <User class="size-6" />,
@@ -35,20 +36,22 @@ export default function PilihPeranPage() {
       <p class="mb-6 text-sm text-slate-500">Pilih peran yang sesuai denganmu.</p>
 
       <div class="space-y-4">
-        {ROLES.map((role) => (
-          <A
-            href={role.href}
-            class={`flex items-start gap-4 rounded-2xl border-2 bg-white p-5 transition ${role.color}`}
-          >
-            <div class={`flex size-12 shrink-0 items-center justify-center rounded-xl ${role.iconBg}`}>
-              {role.icon}
-            </div>
-            <div>
-              <p class="text-sm font-bold text-ink">{role.title}</p>
-              <p class="mt-0.5 text-xs leading-relaxed text-slate-500">{role.desc}</p>
-            </div>
-          </A>
-        ))}
+        <For each={ROLES}>
+          {(role) => (
+            <A
+              href={role.href}
+              class={`flex items-start gap-4 rounded-2xl border-2 bg-white p-5 transition ${role.color}`}
+            >
+              <div class={`flex size-12 shrink-0 items-center justify-center rounded-xl ${role.iconBg}`}>
+                {role.icon}
+              </div>
+              <div>
+                <p class="text-sm font-bold text-ink">{role.title}</p>
+                <p class="mt-0.5 text-xs leading-relaxed text-slate-500">{role.desc}</p>
+              </div>
+            </A>
+          )}
+        </For>
       </div>
 
       <p class="mt-6 text-center text-sm text-slate-500">

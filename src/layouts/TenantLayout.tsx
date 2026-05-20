@@ -1,5 +1,5 @@
 import { A, useLocation } from '@solidjs/router';
-import { JSX, Show } from 'solid-js';
+import { For, JSX, Show } from 'solid-js';
 import { Bell } from 'lucide-solid';
 import { Logo } from '~/components/shared/Logo';
 import { Avatar } from '~/components/ui/Avatar';
@@ -48,31 +48,33 @@ export function TenantLayout(props: TenantLayoutProps) {
         {/* Tab nav */}
         <div class="mx-auto max-w-5xl">
           <nav class="-mb-px flex gap-0 overflow-x-auto">
-            {NAV_TABS.map((tab) => (
-              <A
-                href={tab.href}
-                class={[
-                  'flex shrink-0 items-center gap-1.5 border-b-2 px-4 pb-3 pt-2 text-sm font-medium transition-colors',
-                  isActive(tab.href, tab.exact)
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-ink',
-                ].join(' ')}
-              >
-                {tab.label}
-                <Show when={tab.badge}>
-                  <span
-                    class={[
-                      'flex size-4 items-center justify-center rounded-full text-[10px] font-bold',
-                      isActive(tab.href, tab.exact)
-                        ? 'bg-primary text-white'
-                        : 'bg-slate-200 text-slate-500',
-                    ].join(' ')}
-                  >
-                    {tab.badge}
-                  </span>
-                </Show>
-              </A>
-            ))}
+            <For each={NAV_TABS}>
+              {(tab) => (
+                <A
+                  href={tab.href}
+                  class={[
+                    'flex shrink-0 items-center gap-1.5 border-b-2 px-4 pb-3 pt-2 text-sm font-medium transition-colors',
+                    isActive(tab.href, tab.exact)
+                      ? 'border-primary text-primary'
+                      : 'border-transparent text-slate-500 hover:border-slate-300 hover:text-ink',
+                  ].join(' ')}
+                >
+                  {tab.label}
+                  <Show when={tab.badge}>
+                    <span
+                      class={[
+                        'flex size-4 items-center justify-center rounded-full text-[10px] font-bold',
+                        isActive(tab.href, tab.exact)
+                          ? 'bg-primary text-white'
+                          : 'bg-slate-200 text-slate-500',
+                      ].join(' ')}
+                    >
+                      {tab.badge}
+                    </span>
+                  </Show>
+                </A>
+              )}
+            </For>
           </nav>
         </div>
       </header>

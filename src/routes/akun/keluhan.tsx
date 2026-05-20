@@ -1,5 +1,10 @@
-import { createSignal, For, Show } from 'solid-js';
-import { Plus, MessageSquare, Send } from 'lucide-solid';
+import {
+  createAsync,
+  useSubmission,
+  type RouteDefinition,
+} from '@solidjs/router';
+import { createSignal, For, Show, Suspense } from 'solid-js';
+import { Plus, MessageSquare } from 'lucide-solid';
 import { TenantLayout } from '~/layouts/TenantLayout';
 import { SEO } from '~/components/shared/SEO';
 import { StatusBadge } from '~/components/ui/Badge';
@@ -7,58 +12,50 @@ import { Button } from '~/components/ui/Button';
 import { Modal } from '~/components/ui/Modal';
 import { Input } from '~/components/ui/Input';
 import { Textarea } from '~/components/ui/Textarea';
-import { Avatar } from '~/components/ui/Avatar';
+import { Skeleton } from '~/components/ui/Skeleton';
+import { EmptyState } from '~/components/ui/EmptyState';
+import {
+  userComplaintsQuery,
+  createComplaintAction,
+  activeRentalQuery,
+} from '~/server/actions/penyewa';
+import { currentUserQuery } from '~/server/actions/auth';
+import { formatTanggal } from '~/lib/shared/slug';
 
-interface Tiket {
-  id: string;
-  judul: string;
-  properti: string;
-  status: 'Terbuka' | 'Diproses' | 'Selesai';
-  dibuat: string;
-  balasan: number;
-  pesan: { dari: string; isi: string; waktu: string }[];
+export const route = {
+  preload() {
+    currentUserQuery();
+    userComplaintsQuery();
+    activeRentalQuery();
+  },
+} satisfies RouteDefinition;
+
+const STATUS_VARIANT = {
+  TERBUKA: 'menunggu',
+  DIPROSES: 'telat',
+  SELESAI: 'lunas',
+  DITUTUP: 'dibatalkan',
+} as const;
+
+function statusLabel(s: string) {
+  return s === 'TERBUKA'
+    ? 'Terbuka'
+    : s === 'DIPROSES'
+      ? 'Diproses'
+      : s === 'SELESAI'
+        ? 'Selesai'
+        : 'Ditutup';
 }
 
-const TIKETS: Tiket[] = [
-  {
-    id: 'TKT-001',
-    judul: 'AC kamar tidak berfungsi',
-    properti: 'Kost Pak Slamet A – Kamar 3',
-    status: 'Diproses',
-    dibuat: '15 Mei 26',
-    balasan: 2,
-    pesan: [
-      { dari: 'Saya', isi: 'Pak, AC di kamar saya tidak dingin sejak 3 hari lalu. Sudah dicek?', waktu: '15 Mei, 10:32' },
-      { dari: 'Pak Slamet', isi: 'Maaf ya Mbak Dewi, nanti siang kami kirim teknisi.', waktu: '15 Mei, 11:15' },
-      { dari: 'Saya', isi: 'Terima kasih Pak, ditunggu ya.', waktu: '15 Mei, 11:17' },
-    ],
-  },
-  {
-    id: 'TKT-002',
-    judul: 'Kunci kamar susah dibuka',
-    properti: 'Kost Pak Slamet A – Kamar 3',
-    status: 'Selesai',
-    dibuat: '02 Apr 26',
-    balasan: 3,
-    pesan: [
-      { dari: 'Saya', isi: 'Kunci pintu kamar saya susah dibuka, perlu diganti.', waktu: '02 Apr, 08:11' },
-    ],
-  },
-];
-
-const STATUS_VARIANT: Record<string, 'menunggu' | 'telat' | 'lunas'> = {
-  Terbuka: 'menunggu',
-  Diproses: 'telat',
-  Selesai: 'lunas',
-};
-
 export default function KeluhanPenyewaPage() {
-  const [selected, setSelected] = createSignal<Tiket>(TIKETS[0]);
+  const user = createAsync(() => currentUserQuery());
+  const complaints = createAsync(() => userComplaintsQuery());
+  const rental = createAsync(() => activeRentalQuery());
+  const sub = useSubmission(createComplaintAction);
   const [showModal, setShowModal] = createSignal(false);
-  const [reply, setReply] = createSignal('');
 
   return (
-    <TenantLayout userName="Dewi Ananda">
+    <TenantLayout userName={user()?.namaLengkap ?? undefined}>
       <SEO title="Tiket & Keluhan" noIndex />
 
       <div class="mb-4 flex items-center justify-between">
@@ -68,100 +65,107 @@ export default function KeluhanPenyewaPage() {
         </Button>
       </div>
 
-      <div class="grid gap-4 lg:grid-cols-[280px_1fr]">
-        {/* List tiket */}
-        <div class="space-y-2">
-          <For each={TIKETS}>
-            {(t) => (
-              <button
-                type="button"
-                class={[
-                  'w-full rounded-2xl border p-3 text-left transition',
-                  selected().id === t.id ? 'border-primary bg-primary-light/30' : 'border-slate-100 bg-white hover:bg-slate-50',
-                ].join(' ')}
-                onClick={() => setSelected(t)}
-              >
-                <div class="mb-1 flex items-center justify-between gap-2">
-                  <p class="font-mono text-[10px] text-slate-400">{t.id}</p>
-                  <StatusBadge variant={STATUS_VARIANT[t.status]}>{t.status}</StatusBadge>
-                </div>
-                <p class="text-sm font-semibold text-ink">{t.judul}</p>
-                <p class="mt-0.5 text-[10px] text-slate-400">{t.properti}</p>
-                <div class="mt-2 flex items-center gap-2 text-[10px] text-slate-400">
-                  <MessageSquare class="size-3" /> {t.balasan} balasan · {t.dibuat}
-                </div>
-              </button>
-            )}
-          </For>
-        </div>
-
-        {/* Chat thread */}
-        <div class="flex flex-col overflow-hidden rounded-2xl border border-slate-100 bg-white" style={{ height: '480px' }}>
-          <div class="flex items-start justify-between border-b border-slate-100 p-4">
-            <div>
-              <p class="font-semibold text-ink">{selected().judul}</p>
-              <p class="text-xs text-slate-400">{selected().properti}</p>
-            </div>
-            <StatusBadge variant={STATUS_VARIANT[selected().status]}>{selected().status}</StatusBadge>
+      <Suspense
+        fallback={
+          <div class="space-y-2">
+            <For each={[0, 1]}>{() => <Skeleton class="h-20" />}</For>
           </div>
-
-          <div class="flex-1 space-y-3 overflow-y-auto p-4">
-            <For each={selected().pesan}>
-              {(msg) => {
-                const isSelf = msg.dari === 'Saya';
-                return (
-                  <div class={`flex gap-2 ${isSelf ? 'flex-row-reverse' : ''}`}>
-                    <Avatar name={isSelf ? 'Dewi Ananda' : msg.dari} size="sm" />
-                    <div class={`max-w-[70%] ${isSelf ? 'items-end' : 'items-start'} flex flex-col gap-0.5`}>
-                      <div class={`rounded-2xl px-3 py-2 text-sm ${isSelf ? 'bg-primary text-white rounded-tr-none' : 'bg-slate-100 text-ink rounded-tl-none'}`}>
-                        {msg.isi}
-                      </div>
-                      <p class="text-[10px] text-slate-400">{msg.waktu}</p>
-                    </div>
+        }
+      >
+        <Show
+          when={complaints() && complaints()!.length > 0}
+          fallback={
+            <EmptyState
+              title="Belum ada tiket keluhan"
+              description="Laporkan kerusakan atau masalah lain melalui tombol di atas."
+              icon={<MessageSquare class="size-6 text-primary" />}
+            />
+          }
+        >
+          <div class="space-y-3">
+            <For each={complaints()}>
+              {(c) => (
+                <div class="rounded-2xl border border-slate-100 bg-white p-4">
+                  <div class="mb-1 flex items-center justify-between gap-2">
+                    <p class="font-mono text-[10px] text-slate-400">{c.id}</p>
+                    <StatusBadge variant={STATUS_VARIANT[c.status]}>
+                      {statusLabel(c.status)}
+                    </StatusBadge>
                   </div>
-                );
-              }}
+                  <p class="text-sm font-semibold text-ink">{c.judul}</p>
+                  <Show when={c.boardingHouse}>
+                    <p class="text-[10px] text-slate-400">{c.boardingHouse!.nama}</p>
+                  </Show>
+                  <p class="mt-2 text-xs text-slate-600">{c.deskripsi}</p>
+                  <Show when={c.resolusi}>
+                    <div class="mt-3 rounded-xl bg-success-light p-3 text-xs">
+                      <p class="font-semibold text-success">Tanggapan owner</p>
+                      <p class="mt-1 text-slate-700">{c.resolusi}</p>
+                    </div>
+                  </Show>
+                  <p class="mt-2 text-[10px] text-slate-400">
+                    Dibuat {formatTanggal(c.createdAt)}
+                  </p>
+                </div>
+              )}
             </For>
           </div>
+        </Show>
+      </Suspense>
 
-          <Show when={selected().status !== 'Selesai'}>
-            <div class="flex gap-2 border-t border-slate-100 p-3">
-              <input
-                type="text"
-                placeholder="Tulis balasan..."
-                class="flex-1 rounded-xl border border-slate-200 px-3 py-2 text-sm focus:border-primary focus:outline-none"
-                value={reply()}
-                onInput={(e) => setReply(e.currentTarget.value)}
-              />
-              <Button size="sm" class="gap-1.5" onClick={() => setReply('')}>
-                <Send class="size-4" />
-              </Button>
-            </div>
-          </Show>
-          <Show when={selected().status === 'Selesai'}>
-            <div class="border-t border-slate-100 p-3 text-center text-xs text-slate-400">
-              Tiket ini telah diselesaikan.
-            </div>
-          </Show>
-        </div>
-      </div>
-
-      {/* Modal buat tiket */}
       <Modal open={showModal()} onClose={() => setShowModal(false)} title="Buat Tiket Keluhan">
-        <div class="space-y-3">
-          <Input label="Judul Keluhan" placeholder="Contoh: AC tidak berfungsi" />
+        <Show when={sub.result && 'ok' in sub.result && !sub.result.ok}>
+          <div class="mb-3 rounded-xl bg-red-50 px-3 py-2 text-sm text-danger">
+            {sub.result && 'message' in sub.result ? sub.result.message : 'Gagal mengirim'}
+          </div>
+        </Show>
+        <form action={createComplaintAction} method="post" class="space-y-3">
+          <Show when={rental()}>
+            <input type="hidden" name="boardingHouseId" value={rental()!.room.boardingHouse.id} />
+            <p class="rounded-xl bg-slate-50 p-3 text-xs text-slate-500">
+              Tiket akan dilampirkan ke kost{' '}
+              <strong class="text-ink">{rental()!.room.boardingHouse.nama}</strong>
+            </p>
+          </Show>
+          <Input name="judul" label="Judul Keluhan" placeholder="Contoh: AC tidak berfungsi" required />
           <div>
-            <label class="mb-1 block text-xs font-medium text-ink">Properti</label>
-            <select class="h-9 w-full rounded-xl border border-slate-200 px-3 text-sm focus:border-primary focus:outline-none">
-              <option>Kost Pak Slamet A – Kamar 3</option>
+            <label class="mb-1 block text-xs font-medium text-ink">Kategori</label>
+            <select
+              name="kategori"
+              class="h-9 w-full rounded-xl border border-slate-200 px-3 text-sm focus:border-primary focus:outline-none"
+              required
+            >
+              <option value="">—</option>
+              <option value="Fasilitas">Fasilitas / kerusakan</option>
+              <option value="Kebersihan">Kebersihan</option>
+              <option value="Keamanan">Keamanan</option>
+              <option value="Pembayaran">Pembayaran</option>
+              <option value="Lainnya">Lainnya</option>
             </select>
           </div>
-          <Textarea label="Detail Keluhan" placeholder="Jelaskan masalah yang kamu alami..." rows={4} />
-          <div class="flex justify-end gap-2 pt-2">
-            <Button variant="secondary" onClick={() => setShowModal(false)}>Batal</Button>
-            <Button onClick={() => setShowModal(false)}>Kirim Tiket</Button>
+          <div>
+            <label class="mb-1 block text-xs font-medium text-ink">Prioritas</label>
+            <select
+              name="prioritas"
+              class="h-9 w-full rounded-xl border border-slate-200 px-3 text-sm focus:border-primary focus:outline-none"
+            >
+              <option value="RENDAH">Rendah</option>
+              <option value="SEDANG" selected>Sedang</option>
+              <option value="TINGGI">Tinggi</option>
+              <option value="KRITIS">Kritis</option>
+            </select>
           </div>
-        </div>
+          <Textarea name="deskripsi" label="Detail Keluhan" rows={4} required />
+
+          <div class="flex justify-end gap-2 pt-2">
+            <Button type="button" variant="secondary" onClick={() => setShowModal(false)}>
+              Batal
+            </Button>
+            <Button type="submit" loading={sub.pending}>
+              Kirim Tiket
+            </Button>
+          </div>
+        </form>
       </Modal>
     </TenantLayout>
   );

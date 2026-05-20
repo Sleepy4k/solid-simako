@@ -1,5 +1,5 @@
 import { A, useLocation } from '@solidjs/router';
-import { createSignal, Show } from 'solid-js';
+import { createSignal, For, Show } from 'solid-js';
 import { Menu, X } from 'lucide-solid';
 import { Logo } from './Logo';
 import { ButtonLink } from '~/components/ui/Button';
@@ -24,22 +24,24 @@ export function PublicNavbar() {
 
         {/* Center: Nav links (desktop) */}
         <nav class="hidden items-center gap-1 md:flex">
-          {NAV_LINKS.map((link) => {
-            const isActive = () => location.pathname === link.href;
-            return (
-              <A
-                href={link.href}
-                class={[
-                  'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
-                  isActive()
-                    ? 'bg-primary-light text-primary'
-                    : 'text-slate-600 hover:bg-slate-100 hover:text-ink',
-                ].join(' ')}
-              >
-                {link.label}
-              </A>
-            );
-          })}
+          <For each={NAV_LINKS}>
+            {(link) => {
+              const isActive = () => location.pathname === link.href;
+              return (
+                <A
+                  href={link.href}
+                  class={[
+                    'rounded-lg px-3 py-1.5 text-sm font-medium transition-colors',
+                    isActive()
+                      ? 'bg-primary-light text-primary'
+                      : 'text-slate-600 hover:bg-slate-100 hover:text-ink',
+                  ].join(' ')}
+                >
+                  {link.label}
+                </A>
+              );
+            }}
+          </For>
         </nav>
 
         {/* Right: Auth buttons */}
@@ -71,15 +73,17 @@ export function PublicNavbar() {
       <Show when={mobileOpen()}>
         <div class="border-t border-slate-100 bg-white px-4 pb-4 pt-2 md:hidden">
           <nav class="flex flex-col gap-1">
-            {NAV_LINKS.map((link) => (
-              <A
-                href={link.href}
-                onClick={() => setMobileOpen(false)}
-                class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-ink"
-              >
-                {link.label}
-              </A>
-            ))}
+            <For each={NAV_LINKS}>
+              {(link) => (
+                <A
+                  href={link.href}
+                  onClick={() => setMobileOpen(false)}
+                  class="rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 hover:text-ink"
+                >
+                  {link.label}
+                </A>
+              )}
+            </For>
             <hr class="my-2 border-slate-100" />
             <A
               href={ROUTES.MASUK}

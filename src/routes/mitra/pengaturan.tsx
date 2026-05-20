@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js';
+import { createSignal, For } from 'solid-js';
 import { Bell, Shield, Smartphone } from 'lucide-solid';
 import { MitraLayout } from '~/layouts/MitraLayout';
 import { SEO } from '~/components/shared/SEO';
@@ -27,21 +27,23 @@ export default function PengaturanMitraPage() {
             <Bell class="size-4 text-primary" /> Notifikasi
           </h2>
           <div class="space-y-4">
-            {[
+            <For each={[
               { label: 'Email notifikasi', desc: 'Terima update via email', state: notifEmail, set: setNotifEmail },
               { label: 'WhatsApp notifikasi', desc: 'Terima pesan di WA (pastikan nomor aktif)', state: notifWa, set: setNotifWa },
               { label: 'Booking & verifikasi', desc: 'Notif saat ada booking/pembayaran masuk', state: notifBooking, set: setNotifBooking },
               { label: 'Pengingat tagihan', desc: 'Reminder H-3 sebelum jatuh tempo', state: notifTagihan, set: setNotifTagihan },
               { label: 'Keluhan penyewa', desc: 'Notif saat ada keluhan baru', state: notifKeluhan, set: setNotifKeluhan },
-            ].map((item) => (
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="text-sm font-medium text-ink">{item.label}</p>
-                  <p class="text-xs text-slate-500">{item.desc}</p>
+            ]}>
+              {(item) => (
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-ink">{item.label}</p>
+                    <p class="text-xs text-slate-500">{item.desc}</p>
+                  </div>
+                  <Toggle checked={item.state()} onChange={item.set} />
                 </div>
-                <Toggle checked={item.state()} onChange={item.set} />
-              </div>
-            ))}
+              )}
+            </For>
           </div>
         </Card>
 

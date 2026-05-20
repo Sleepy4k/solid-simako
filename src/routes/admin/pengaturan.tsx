@@ -1,4 +1,4 @@
-import { createSignal } from 'solid-js';
+import { createSignal, For } from 'solid-js';
 import { Bell, Shield, Globe, Mail, Smartphone, AlertTriangle } from 'lucide-solid';
 import { AdminLayout } from '~/layouts/AdminLayout';
 import { SEO } from '~/components/shared/SEO';
@@ -29,20 +29,22 @@ export default function AdminPengaturanPage() {
             <Bell class="size-4 text-primary" /> Notifikasi Admin
           </h2>
           <div class="space-y-4">
-            {[
+            <For each={[
               { label: 'KYC baru masuk', desc: 'Notif saat ada pengajuan KYC owner baru', state: notifKyc, set: setNotifKyc },
               { label: 'Dispute baru', desc: 'Notif saat ada dispute yang perlu ditangani', state: notifDispute, set: setNotifDispute },
               { label: 'Login mencurigakan', desc: 'Alert saat ada percobaan login gagal berulang', state: notifLogin, set: setNotifLogin },
               { label: 'Laporan konten', desc: 'Notif saat ada listing yang dilaporkan pengguna', state: notifReport, set: setNotifReport },
-            ].map((item) => (
-              <div class="flex items-start justify-between gap-3">
-                <div>
-                  <p class="text-sm font-medium text-ink">{item.label}</p>
-                  <p class="text-xs text-slate-500">{item.desc}</p>
+            ]}>
+              {(item) => (
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <p class="text-sm font-medium text-ink">{item.label}</p>
+                    <p class="text-xs text-slate-500">{item.desc}</p>
+                  </div>
+                  <Toggle checked={item.state()} onChange={item.set} />
                 </div>
-                <Toggle checked={item.state()} onChange={item.set} />
-              </div>
-            ))}
+              )}
+            </For>
           </div>
         </Card>
 

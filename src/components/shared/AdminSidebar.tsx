@@ -1,5 +1,5 @@
 import { A, useLocation } from '@solidjs/router';
-import { JSX, Show } from 'solid-js';
+import { For, JSX, Show } from 'solid-js';
 import {
   LayoutDashboard,
   ShieldCheck,
@@ -86,40 +86,44 @@ export function AdminSidebar(props: AdminSidebarProps) {
 
       {/* Nav */}
       <nav class="flex-1 overflow-y-auto px-2 py-3">
-        {SECTIONS.map((section) => (
-          <div class="mb-4">
-            <Show when={section.label}>
-              <p class="mb-1 px-3 text-[10px] font-semibold tracking-wider text-slate-400">
-                {section.label}
-              </p>
-            </Show>
-            <ul class="space-y-0.5">
-              {section.items.map((item) => (
-                <li>
-                  <A
-                    href={item.href}
-                    class={[
-                      'flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-colors',
-                      isActive(item.href)
-                        ? 'bg-primary-light text-primary'
-                        : 'text-slate-600 hover:bg-slate-50 hover:text-ink',
-                    ].join(' ')}
-                  >
-                    <span class="flex items-center gap-2.5">
-                      {item.icon}
-                      {item.label}
-                    </span>
-                    <Show when={item.badge}>
-                      <Badge variant="telat" class="text-[10px]">
-                        {item.badge}
-                      </Badge>
-                    </Show>
-                  </A>
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
+        <For each={SECTIONS}>
+          {(section) => (
+            <div class="mb-4">
+              <Show when={section.label}>
+                <p class="mb-1 px-3 text-[10px] font-semibold tracking-wider text-slate-400">
+                  {section.label}
+                </p>
+              </Show>
+              <ul class="space-y-0.5">
+                <For each={section.items}>
+                  {(item) => (
+                    <li>
+                      <A
+                        href={item.href}
+                        class={[
+                          'flex items-center justify-between rounded-xl px-3 py-2 text-sm font-medium transition-colors',
+                          isActive(item.href)
+                            ? 'bg-primary-light text-primary'
+                            : 'text-slate-600 hover:bg-slate-50 hover:text-ink',
+                        ].join(' ')}
+                      >
+                        <span class="flex items-center gap-2.5">
+                          {item.icon}
+                          {item.label}
+                        </span>
+                        <Show when={item.badge}>
+                          <Badge variant="telat" class="text-[10px]">
+                            {item.badge}
+                          </Badge>
+                        </Show>
+                      </A>
+                    </li>
+                  )}
+                </For>
+              </ul>
+            </div>
+          )}
+        </For>
       </nav>
 
       {/* User info */}
