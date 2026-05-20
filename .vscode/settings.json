@@ -1,0 +1,26 @@
+{
+  "github.copilot.chat.codeGeneration.useInstructionFiles": true,
+  "github.copilot.chat.promptFileContextProvider.enabled": true,
+  "github.copilot.chat.codeGeneration.instructions": [
+    {
+      "file": ".github/copilot-instructions.md"
+    },
+    {
+      "file": ".github/AGENTS.md"
+    }
+  ],
+  "chat.instructionsFilesLocations": {
+    ".github/instructions": true,
+    ".github/copilot-instructions.md": true,
+    ".github/AGENTS.md": true,
+    "~/.copilot/instructions": false
+  },
+  "files.associations": {
+    ".env*": "env",
+    "*.instructions.md": "markdown",
+    "*.prompt.md": "markdown",
+    "*.agent.md": "markdown",
+    "AGENTS.md": "markdown",
+    "copilot-instructions.md": "markdown"
+  }
+}
