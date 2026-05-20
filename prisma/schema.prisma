@@ -15,9 +15,9 @@ datasource db {
 // ─────────────────────────────────────────────────────────────────────────────
 
 enum UserRole {
-  PENYEWA   // pencari / penyewa kost
-  MITRA     // owner / pemilik kost
-  ADMIN     // super admin platform
+  PENYEWA // pencari / penyewa kost
+  MITRA // owner / pemilik kost
+  ADMIN // super admin platform
 }
 
 enum KycStatus {
@@ -44,17 +44,17 @@ enum RoomStatus {
 }
 
 enum RentalStatus {
-  MENUNGGU_BAYAR    // booking dibuat, belum transfer
-  MENUNGGU_VERIF    // sudah upload bukti, menunggu admin cek
-  AKTIF             // pembayaran terverifikasi, sewa berjalan
-  JATUH_TEMPO       // sudah melewati tanggal akhir
-  SELESAI           // penyewa sudah keluar
+  MENUNGGU_BAYAR // booking dibuat, belum transfer
+  MENUNGGU_VERIF // sudah upload bukti, menunggu admin cek
+  AKTIF // pembayaran terverifikasi, sewa berjalan
+  JATUH_TEMPO // sudah melewati tanggal akhir
+  SELESAI // penyewa sudah keluar
   DIBATALKAN
 }
 
 enum TransactionType {
-  BOOKING           // pembayaran sewa pertama
-  PERPANJANGAN      // perpanjangan sewa bulanan
+  BOOKING // pembayaran sewa pertama
+  PERPANJANGAN // perpanjangan sewa bulanan
   DENDA
   REFUND
 }
@@ -129,24 +129,26 @@ model User {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  role            Role             @relation(fields: [roleId], references: [id])
-  profile         UserProfile?
-  ownerProfile    OwnerProfile?
-  settings        UserSettings?
-  sessions        ActiveSession[]
-  otpTokens       OtpToken[]
-  boardingHouses  BoardingHouse[]
-  rentals         Rental[]
-  wishlists       Wishlist[]
-  chatRoomsAsBuyer ChatRoom[]     @relation(name: "ChatRoomBuyer")
-  chatMessages    ChatMessage[]
-  broadcasts      Broadcast[]
-  complaints      Complaint[]
-  auditLogs       AuditLog[]
+  role             Role            @relation(fields: [roleId], references: [id])
+  profile          UserProfile?
+  ownerProfile     OwnerProfile?
+  settings         UserSettings?
+  sessions         ActiveSession[]
+  otpTokens        OtpToken[]
+  boardingHouses   BoardingHouse[]
+  rentals          Rental[]
+  wishlists        Wishlist[]
+  chatRoomsAsBuyer ChatRoom[]      @relation(name: "ChatRoomBuyer")
+  chatMessages     ChatMessage[]
+  broadcasts       Broadcast[]
+  complaints       Complaint[]
+  reviews          Review[]
+  articles         Article[]
+  auditLogs        AuditLog[]
 
   // asset relations (named to avoid ambiguity)
-  avatarAsset     Asset?           @relation(name: "UserAvatar", fields: [avatarAssetId], references: [id])
-  avatarAssetId   String?          @unique @db.Char(36)
+  avatarAsset   Asset?  @relation(name: "UserAvatar", fields: [avatarAssetId], references: [id])
+  avatarAssetId String? @unique @db.Char(36)
 
   @@index([roleId])
   @@map("users")
@@ -157,19 +159,19 @@ model User {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model UserProfile {
-  id          String   @id @default(uuid()) @db.Char(36)
-  userId      String   @unique @db.Char(36)
-  namaLengkap String   @db.VarChar(191)
-  telepon     String?  @db.VarChar(20)
-  alamat      String?  @db.Text
+  id           String    @id @default(uuid()) @db.Char(36)
+  userId       String    @unique @db.Char(36)
+  namaLengkap  String    @db.VarChar(191)
+  telepon      String?   @db.VarChar(20)
+  alamat       String?   @db.Text
   tanggalLahir DateTime?
-  jenisKelamin String? @db.VarChar(20)
-  kampusId    Int?
-  createdAt   DateTime @default(now())
-  updatedAt   DateTime @updatedAt
+  jenisKelamin String?   @db.VarChar(20)
+  kampusId     Int?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
 
-  user    User           @relation(fields: [userId], references: [id], onDelete: Cascade)
-  kampus  MasterCampus?  @relation(fields: [kampusId], references: [id])
+  user   User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kampus MasterCampus? @relation(fields: [kampusId], references: [id])
 
   @@index([kampusId])
   @@map("user_profiles")
@@ -180,20 +182,20 @@ model UserProfile {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model OwnerProfile {
-  id           String    @id @default(uuid()) @db.Char(36)
-  userId       String    @unique @db.Char(36)
-  namaUsaha    String?   @db.VarChar(191)
-  namaBank     String?   @db.VarChar(100)
-  rekeningNo   String?   @db.VarChar(50)
-  rekeningNama String?   @db.VarChar(191)
-  kycStatus    KycStatus @default(BELUM_UPLOAD)
-  kycNote      String?   @db.VarChar(500)
+  id            String    @id @default(uuid()) @db.Char(36)
+  userId        String    @unique @db.Char(36)
+  namaUsaha     String?   @db.VarChar(191)
+  namaBank      String?   @db.VarChar(100)
+  rekeningNo    String?   @db.VarChar(50)
+  rekeningNama  String?   @db.VarChar(191)
+  kycStatus     KycStatus @default(BELUM_UPLOAD)
+  kycNote       String?   @db.VarChar(500)
   kycVerifiedAt DateTime?
-  createdAt    DateTime  @default(now())
-  updatedAt    DateTime  @updatedAt
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
 
-  user    User    @relation(fields: [userId], references: [id], onDelete: Cascade)
-  ktpAsset Asset? @relation(name: "OwnerKtp", fields: [ktpAssetId], references: [id])
+  user       User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ktpAsset   Asset?  @relation(name: "OwnerKtp", fields: [ktpAssetId], references: [id])
   ktpAssetId String? @unique @db.Char(36)
 
   @@map("owner_profiles")
@@ -204,13 +206,13 @@ model OwnerProfile {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model UserSettings {
-  id                  String  @id @default(uuid()) @db.Char(36)
-  userId              String  @unique @db.Char(36)
-  notifEmail          Boolean @default(true)
-  notifWhatsapp       Boolean @default(false)
-  notifPembayaran     Boolean @default(true)
-  notifBroadcast      Boolean @default(true)
-  bahasa              String  @default("id") @db.VarChar(10)
+  id              String  @id @default(uuid()) @db.Char(36)
+  userId          String  @unique @db.Char(36)
+  notifEmail      Boolean @default(true)
+  notifWhatsapp   Boolean @default(false)
+  notifPembayaran Boolean @default(true)
+  notifBroadcast  Boolean @default(true)
+  bahasa          String  @default("id") @db.VarChar(10)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 
@@ -254,12 +256,13 @@ model Asset {
   createdAt    DateTime      @default(now())
 
   // Named reverse relations to avoid Prisma ambiguity
-  userAvatars         User[]          @relation(name: "UserAvatar")
-  ownerKtps           OwnerProfile[]  @relation(name: "OwnerKtp")
+  userAvatars         User[]               @relation(name: "UserAvatar")
+  ownerKtps           OwnerProfile[]       @relation(name: "OwnerKtp")
   boardingHouseImages BoardingHouseImage[] @relation(name: "BoardingHouseImageAsset")
-  roomImages          RoomImage[]     @relation(name: "RoomImageAsset")
-  transactionProofs   Transaction[]   @relation(name: "TransactionProof")
-  banners             CmsBanner[]     @relation(name: "BannerImage")
+  roomImages          RoomImage[]          @relation(name: "RoomImageAsset")
+  transactionProofs   Transaction[]        @relation(name: "TransactionProof")
+  banners             CmsBanner[]          @relation(name: "BannerImage")
+  articleCovers       Article[]            @relation(name: "ArticleCover")
 
   @@index([category])
   @@map("assets")
@@ -270,17 +273,17 @@ model Asset {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model MasterCampus {
-  id        Int    @id @default(autoincrement())
-  nama      String @db.VarChar(191)
-  singkatan String @db.VarChar(20)
-  kota      String @db.VarChar(100)
-  alamat    String? @db.Text
+  id        Int      @id @default(autoincrement())
+  nama      String   @db.VarChar(191)
+  singkatan String   @db.VarChar(20)
+  kota      String   @db.VarChar(100)
+  alamat    String?  @db.Text
   latitude  Decimal? @db.Decimal(10, 7)
   longitude Decimal? @db.Decimal(10, 7)
-  isActive  Boolean @default(true)
+  isActive  Boolean  @default(true)
 
-  userProfiles    UserProfile[]
-  boardingHouses  BoardingHouse[]
+  userProfiles   UserProfile[]
+  boardingHouses BoardingHouse[]
 
   @@map("master_campuses")
 }
@@ -346,6 +349,7 @@ model BoardingHouse {
   wishlists  Wishlist[]
   chatRooms  ChatRoom[]
   complaints Complaint[]
+  reviews    Review[]
 
   @@index([ownerId])
   @@index([kampusId])
@@ -453,16 +457,16 @@ model RoomImage {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Rental {
-  id           String       @id @default(uuid()) @db.Char(36)
-  roomId       String       @db.Char(36)
-  penyewaId    String       @db.Char(36)
-  tanggalMulai DateTime     @db.Date
-  tanggalAkhir DateTime     @db.Date
+  id             String       @id @default(uuid()) @db.Char(36)
+  roomId         String       @db.Char(36)
+  penyewaId      String       @db.Char(36)
+  tanggalMulai   DateTime     @db.Date
+  tanggalAkhir   DateTime     @db.Date
   hargaDisetujui Int
-  status       RentalStatus @default(MENUNGGU_BAYAR)
-  catatan      String?      @db.Text
-  createdAt    DateTime     @default(now())
-  updatedAt    DateTime     @updatedAt
+  status         RentalStatus @default(MENUNGGU_BAYAR)
+  catatan        String?      @db.Text
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
 
   room         Room          @relation(fields: [roomId], references: [id])
   penyewa      User          @relation(fields: [penyewaId], references: [id])
@@ -479,25 +483,25 @@ model Rental {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Transaction {
-  id              String            @id @default(uuid()) @db.Char(36)
-  rentalId        String            @db.Char(36)
-  tipe            TransactionType
-  nominal         Int
-  periodeAwal     DateTime?         @db.Date
-  periodeAkhir    DateTime?         @db.Date
-  batasTransfer   DateTime?
-  buktiAssetId    String?           @db.Char(36)
-  nomorReferensi  String?           @db.VarChar(100)
-  namaBank        String?           @db.VarChar(100)
-  status          TransactionStatus @default(MENUNGGU_BUKTI)
-  verifiedById    String?           @db.Char(36)
-  verifiedAt      DateTime?
-  rejectionNote   String?           @db.VarChar(500)
-  createdAt       DateTime          @default(now())
-  updatedAt       DateTime          @updatedAt
+  id             String            @id @default(uuid()) @db.Char(36)
+  rentalId       String            @db.Char(36)
+  tipe           TransactionType
+  nominal        Int
+  periodeAwal    DateTime?         @db.Date
+  periodeAkhir   DateTime?         @db.Date
+  batasTransfer  DateTime?
+  buktiAssetId   String?           @db.Char(36)
+  nomorReferensi String?           @db.VarChar(100)
+  namaBank       String?           @db.VarChar(100)
+  status         TransactionStatus @default(MENUNGGU_BUKTI)
+  verifiedById   String?           @db.Char(36)
+  verifiedAt     DateTime?
+  rejectionNote  String?           @db.VarChar(500)
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
 
-  rental      Rental @relation(fields: [rentalId], references: [id])
-  buktiAsset  Asset? @relation(name: "TransactionProof", fields: [buktiAssetId], references: [id])
+  rental     Rental @relation(fields: [rentalId], references: [id])
+  buktiAsset Asset? @relation(name: "TransactionProof", fields: [buktiAssetId], references: [id])
 
   @@index([rentalId])
   @@index([status])
@@ -565,13 +569,13 @@ model ChatMessage {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Broadcast {
-  id            String   @id @default(uuid()) @db.Char(36)
-  senderId      String   @db.Char(36)
-  judul         String   @db.VarChar(255)
-  konten        String   @db.Text
-  targetRole    UserRole?
-  boardingHouseId String? @db.Char(36)
-  createdAt     DateTime @default(now())
+  id              String    @id @default(uuid()) @db.Char(36)
+  senderId        String    @db.Char(36)
+  judul           String    @db.VarChar(255)
+  konten          String    @db.Text
+  targetRole      UserRole?
+  boardingHouseId String?   @db.Char(36)
+  createdAt       DateTime  @default(now())
 
   sender User @relation(fields: [senderId], references: [id])
 
@@ -610,14 +614,14 @@ model Complaint {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model Faq {
-  id        Int      @id @default(autoincrement())
-  pertanyaan String  @db.VarChar(500)
-  jawaban   String   @db.Text
-  kategori  String   @db.VarChar(100)
-  urutan    Int      @default(0)
-  isActive  Boolean  @default(true)
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id         Int      @id @default(autoincrement())
+  pertanyaan String   @db.VarChar(500)
+  jawaban    String   @db.Text
+  kategori   String   @db.VarChar(100)
+  urutan     Int      @default(0)
+  isActive   Boolean  @default(true)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
 
   @@map("faqs")
 }
@@ -627,18 +631,18 @@ model Faq {
 // ─────────────────────────────────────────────────────────────────────────────
 
 model CmsBanner {
-  id         Int             @id @default(autoincrement())
-  judul      String          @db.VarChar(191)
-  deskripsi  String?         @db.VarChar(500)
-  imageAssetId String        @db.Char(36)
-  linkUrl    String?         @db.VarChar(512)
-  placement  BannerPlacement @default(HERO)
-  urutan     Int             @default(0)
-  isActive   Boolean         @default(true)
-  mulaiAt    DateTime?
-  berakhirAt DateTime?
-  createdAt  DateTime        @default(now())
-  updatedAt  DateTime        @updatedAt
+  id           Int             @id @default(autoincrement())
+  judul        String          @db.VarChar(191)
+  deskripsi    String?         @db.VarChar(500)
+  imageAssetId String          @db.Char(36)
+  linkUrl      String?         @db.VarChar(512)
+  placement    BannerPlacement @default(HERO)
+  urutan       Int             @default(0)
+  isActive     Boolean         @default(true)
+  mulaiAt      DateTime?
+  berakhirAt   DateTime?
+  createdAt    DateTime        @default(now())
+  updatedAt    DateTime        @updatedAt
 
   imageAsset Asset @relation(name: "BannerImage", fields: [imageAssetId], references: [id])
 
@@ -666,20 +670,70 @@ model OtpToken {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
-// 27. AUDIT_LOGS
+// 27. REVIEWS (ulasan & rating)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Review {
+  id              String   @id @default(uuid()) @db.Char(36)
+  boardingHouseId String   @db.Char(36)
+  reviewerId      String   @db.Char(36)
+  rentalId        String?  @db.Char(36)
+  rating          Int // 1–5
+  komentar        String?  @db.Text
+  isApproved      Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  boardingHouse BoardingHouse @relation(fields: [boardingHouseId], references: [id], onDelete: Cascade)
+  reviewer      User          @relation(fields: [reviewerId], references: [id])
+
+  @@index([boardingHouseId])
+  @@index([reviewerId])
+  @@map("reviews")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 28. ARTICLES (blog)
+// ─────────────────────────────────────────────────────────────────────────────
+
+model Article {
+  id           String    @id @default(uuid()) @db.Char(36)
+  authorId     String?   @db.Char(36)
+  judul        String    @db.VarChar(255)
+  slug         String    @unique @db.VarChar(280)
+  ringkasan    String?   @db.VarChar(500)
+  konten       String    @db.LongText
+  kategori     String    @db.VarChar(100)
+  coverAssetId String?   @db.Char(36)
+  isPublished  Boolean   @default(false)
+  publishedAt  DateTime?
+  viewCount    Int       @default(0)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  author     User?  @relation(fields: [authorId], references: [id], onDelete: SetNull)
+  coverAsset Asset? @relation(name: "ArticleCover", fields: [coverAssetId], references: [id])
+
+  @@index([slug])
+  @@index([kategori])
+  @@map("articles")
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// 29. AUDIT_LOGS
 // ─────────────────────────────────────────────────────────────────────────────
 
 model AuditLog {
-  id           String      @id @default(uuid()) @db.Char(36)
-  userId       String?     @db.Char(36)
-  action       AuditAction
-  targetModel  String      @db.VarChar(100)
-  targetId     String?     @db.VarChar(36)
+  id            String      @id @default(uuid()) @db.Char(36)
+  userId        String?     @db.Char(36)
+  action        AuditAction
+  targetModel   String      @db.VarChar(100)
+  targetId      String?     @db.VarChar(36)
   perubahanLama Json?
   perubahanBaru Json?
-  ipAddress    String?     @db.VarChar(45)
-  userAgent    String?     @db.VarChar(512)
-  createdAt    DateTime    @default(now())
+  ipAddress     String?     @db.VarChar(45)
+  userAgent     String?     @db.VarChar(512)
+  createdAt     DateTime    @default(now())
 
   user User? @relation(fields: [userId], references: [id], onDelete: SetNull)
 
