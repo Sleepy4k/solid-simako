@@ -1,11 +1,16 @@
 {
-  "name": "example-with-prisma",
+  "name": "simako",
   "type": "module",
   "scripts": {
     "dev": "vite dev",
     "build": "vite build",
     "start": "vite start",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "seed": "bun run prisma/seed.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "prisma": {
+    "seed": "bun run prisma/seed.ts"
   },
   "devDependencies": {
     "@types/node": "^24.7.0",
@@ -18,6 +23,7 @@
     "prettier-plugin-tailwindcss": "^0.8.0"
   },
   "dependencies": {
+    "@node-rs/argon2": "^2.0.2",
     "@prisma/client": "^5.12.1",
     "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.0",
@@ -25,6 +31,7 @@
     "@solidjs/vite-plugin-nitro-2": "^0.1.0",
     "@tailwindcss/vite": "^4.3.0",
     "lucide-solid": "^1.16.0",
+    "nanoid": "^5.1.11",
     "nprogress": "^0.2.0",
     "prisma": "^5.12.1",
     "solid-js": "^1.9.5",
