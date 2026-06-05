@@ -1,0 +1,96 @@
+@import "tailwindcss";
+@import "nprogress/nprogress.css";
+
+@theme {
+  --color-navy:       #0A2540;
+  --color-navy-dark:  #061829;
+  --color-navy-mid:   #0d3060;
+  --color-accent:     #0073E6;
+  --color-accent-dark:#005bb5;
+  --color-ice:        #E6F0FA;
+  --color-ice-gray:   #F4F7FA;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html, body { height: 100%; margin: 0; padding: 0; }
+
+body {
+  background-color: #F4F7FA;
+  color: #0A2540;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+#app {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+#nprogress .bar  { background: #0073E6 !important; height: 3px !important; }
+#nprogress .peg  { box-shadow: 0 0 10px #0073E6, 0 0 5px #0073E6 !important; }
+#nprogress .spinner-icon { border-top-color: #0073E6 !important; border-left-color: #0073E6 !important; }
+
+::-webkit-scrollbar              { width: 6px; height: 6px; }
+::-webkit-scrollbar-track        { background: transparent; }
+::-webkit-scrollbar-thumb        { background: #0073E6; border-radius: 99px; }
+::-webkit-scrollbar-thumb:hover  { background: #005bb5; }
+* { scrollbar-width: thin; scrollbar-color: #0073E6 transparent; }
+
+.scrollbar-thin { scrollbar-width: thin; scrollbar-color: #0073E6 transparent; }
+.scrollbar-thin::-webkit-scrollbar       { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-thumb { background: #0073E6; border-radius: 2px; }
+
+input[type="number"]::-webkit-outer-spin-button,
+input[type="number"]::-webkit-inner-spin-button { appearance: none; margin: 0; }
+input[type="number"] { -moz-appearance: textfield; }
+
+input[type="date"]::-webkit-calendar-picker-indicator {
+  cursor: pointer;
+  opacity: 0.5;
+  filter: invert(29%) sepia(74%) saturate(2000%) hue-rotate(200deg) brightness(90%);
+}
+input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: 0.9; }
+
+select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%230A2540' stroke-opacity='0.4' stroke-width='2'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M19 9l-7 7-7-7'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px;
+  padding-right: 2.25rem !important;
+  cursor: pointer;
+}
+select::-ms-expand { display: none; }
+
+@keyframes fadeIn   { from { opacity: 0; } to { opacity: 1; } }
+@keyframes fadeUp   { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: translateY(0); } }
+@keyframes slideLeft{ from { transform: translateX(100%); } to { transform: translateX(0); } }
+@keyframes modalIn  { from { opacity: 0; transform: scale(0.96); } to { opacity: 1; transform: scale(1); } }
+
+@keyframes blobFloat1 {
+  0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+  33%       { transform: translateY(-25px) translateX(18px) scale(1.06); }
+  66%       { transform: translateY(12px) translateX(-12px) scale(0.96); }
+}
+@keyframes blobFloat2 {
+  0%, 100% { transform: translateY(0px) translateX(0px) scale(1); }
+  33%       { transform: translateY(20px) translateX(-22px) scale(0.94); }
+  66%       { transform: translateY(-14px) translateX(16px) scale(1.07); }
+}
+@keyframes blobFloat3 {
+  0%, 100% { transform: translateY(0px) scale(1) rotate(0deg); }
+  50%       { transform: translateY(-18px) scale(1.04) rotate(5deg); }
+}
+.animate-blob1 { animation: blobFloat1 9s ease-in-out infinite; }
+.animate-blob2 { animation: blobFloat2 11s ease-in-out infinite; }
+.animate-blob3 { animation: blobFloat3 7s ease-in-out infinite; }
+
+input:-webkit-autofill {
+  -webkit-box-shadow: 0 0 0 30px #ffffff inset;
+  -webkit-text-fill-color: #0A2540;
+}
+
+.line-clamp-1 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; }
+.line-clamp-2 { overflow: hidden; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }

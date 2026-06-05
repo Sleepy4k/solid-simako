@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1780558402282,
+      "tag": "0000_yielding_adam_destine",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1780591242785,
+      "tag": "0001_acoustic_raider",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1780646400000,
+      "tag": "0002_property_view_log",
+      "breakpoints": true
+    }
+  ]
+}

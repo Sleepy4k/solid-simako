@@ -1,0 +1,47 @@
+{
+  "name": "simakos",
+  "description": "Sistem Manajemen Kos — Purwokerto boarding house management platform",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite dev",
+    "build": "vite build",
+    "start": "vite start",
+    "preview": "vite preview",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "drizzle-kit migrate",
+    "db:push": "drizzle-kit push",
+    "db:reset": "drizzle-kit reset",
+    "db:studio": "drizzle-kit studio",
+    "db:seed": "bun src/server/db/seed.ts",
+    "db:seed:prod": "bun src/server/db/seed-prod.ts"
+  },
+  "dependencies": {
+    "@solidjs/router": "^0.15.4",
+    "@solidjs/start": "2.0.0-alpha.2",
+    "@solidjs/vite-plugin-nitro-2": "^0.1.0",
+    "argon2": "^0.44.0",
+    "drizzle-orm": "^0.45.2",
+    "gsap": "^3.15.0",
+    "jose": "^5.10.0",
+    "lucide-solid": "^1.17.0",
+    "mysql2": "^3.22.4",
+    "nodemailer": "^8.0.10",
+    "nprogress": "^0.2.0",
+    "solid-js": "^1.9.13",
+    "uuid": "^14.0.0",
+    "vite": "^7.3.5",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.0",
+    "@types/node": "^25.9.1",
+    "@types/nodemailer": "^8.0.0",
+    "@types/nprogress": "^0.2.3",
+    "drizzle-kit": "^0.31.10",
+    "tailwindcss": "^4.3.0"
+  },
+  "engines": {
+    "bun": ">=1.1.0"
+  }
+}
