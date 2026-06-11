@@ -1,6 +1,7 @@
 import { useNavigate } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Show, For, Suspense, createResource, createEffect } from "solid-js";
+import { Show, For, createEffect } from "solid-js";
 import { useAuth } from "~/stores/auth";
 import { getAdminStats } from "~/server/actions/rooms";
 import { DashboardLayout } from "~/layouts/DashboardLayout";
@@ -8,7 +9,7 @@ import { DashboardSkeleton } from "~/components/ui/DashboardSkeleton";
 import { SITE } from "~/config/site";
 
 function AdminOverview() {
-  const [stats] = createResource(() => getAdminStats());
+  const stats = createAsync(() => getAdminStats(), { deferStream: true });
 
   const metrics = () => [
     { label: "Total Pengguna",   value: stats()?.totalUsers     ?? 0, icon: "M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z", color: "bg-blue-50 text-accent" },
@@ -71,9 +72,7 @@ export default function AdminDashboard() {
         fallback={<DashboardSkeleton />}
       >
         <DashboardLayout user={user()!} title="Admin Dashboard" breadcrumb={`${SITE.name} / Admin`}>
-          <Suspense fallback={<div class="space-y-5">{[1,2,3].map(() => <div class="h-24 bg-[#E6F0FA] rounded-2xl animate-pulse" />)}</div>}>
-            <AdminOverview />
-          </Suspense>
+          <AdminOverview />
         </DashboardLayout>
       </Show>
     </>

@@ -1,6 +1,6 @@
 import { createAsync, useNavigate } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Show, For, Suspense, createSignal, createEffect } from "solid-js";
+import { Show, For, createSignal, createEffect } from "solid-js";
 import { useAuth } from "~/stores/auth";
 import { getTenantRooms, createPropertyAction } from "~/server/actions/rooms";
 import { DashboardLayout } from "~/layouts/DashboardLayout";
@@ -137,7 +137,7 @@ function RoomsContent() {
     if (u.role !== "tenant") { navigate("/dashboard", { replace: true }); return; }
   });
 
-  const props = createAsync(() => getTenantRooms());
+  const props = createAsync(() => getTenantRooms(), { deferStream: true });
   const [modalOpen, setModalOpen] = createSignal(false);
 
   const refresh = () => location.reload();
@@ -160,81 +160,6 @@ function RoomsContent() {
               Tambah Properti
             </button>
           </div>
-
-          <Suspense fallback={<div class="grid grid-cols-1 sm:grid-cols-2 gap-4">{[1,2].map(() => <div class="h-40 bg-[#E6F0FA] rounded-2xl animate-pulse"/>)}</div>}>
-            <Show
-              when={(props()?.properties.length ?? 0) > 0}
-              fallback={
-                <div class="bg-white rounded-2xl border border-[#E6F0FA] p-12 text-center">
-                  <div class="w-16 h-16 bg-[#E6F0FA] rounded-2xl flex items-center justify-center mx-auto mb-4">
-                    <svg class="w-8 h-8 text-accent/40" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M19 21V5a2 2 0 00-2-2H7a2 2 0 00-2 2v16m14 0h2m-2 0h-5m-9 0H3m2 0h5M9 7h1m-1 4h1"/></svg>
-                  </div>
-                  <h3 class="font-bold text-navy mb-1">Belum ada properti</h3>
-                  <p class="text-sm text-navy/50 mb-4">Tambahkan properti kos pertama Anda sekarang.</p>
-                  <button
-                    type="button"
-                    onClick={() => setModalOpen(true)}
-                    class="inline-flex items-center gap-2 bg-accent hover:bg-accent-dark text-white font-bold px-5 py-2.5 rounded-xl text-sm transition-colors"
-                  >
-                    Tambah Properti
-                  </button>
-                </div>
-              }
-            >
-              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                <For each={props()?.properties}>
-                  {(p) => (
-                    <div class="bg-white rounded-2xl border border-[#E6F0FA] p-5 hover:shadow-md transition-shadow">
-                      <div class="flex items-start justify-between mb-3">
-                        <div class="flex-1 min-w-0 mr-3">
-                          <h3 class="font-bold text-navy truncate">{p.name}</h3>
-                          <p class="text-xs text-navy/50">{p.district}</p>
-                        </div>
-                        <div class="flex flex-col items-end gap-1.5">
-                          <KostTypeChip type={p.kostType} />
-                          <span class={`text-xs font-bold px-2 py-0.5 rounded-full ${p.isActive ? "bg-green-100 text-green-700" : "bg-red-100 text-red-600"}`}>
-                            {p.isActive ? "Aktif" : "Nonaktif"}
-                          </span>
-                        </div>
-                      </div>
-                      <div class="flex gap-4 text-sm mb-4">
-                        <div class="text-center">
-                          <p class="font-black text-navy text-lg">{p.roomTotal}</p>
-                          <p class="text-xs text-navy/40">Total</p>
-                        </div>
-                        <div class="text-center">
-                          <p class="font-black text-green-600 text-lg">{p.roomAvailable}</p>
-                          <p class="text-xs text-navy/40">Kosong</p>
-                        </div>
-                        <div class="text-center">
-                          <p class="font-black text-navy/50 text-lg">{p.roomTotal - p.roomAvailable}</p>
-                          <p class="text-xs text-navy/40">Terisi</p>
-                        </div>
-                      </div>
-                      <Show when={p.minPrice > 0}>
-                        <p class="text-xs text-navy/50 mb-3">Mulai dari <span class="font-bold text-navy">{fmt(p.minPrice)}/bulan</span></p>
-                      </Show>
-                      <div class="flex gap-2">
-                        <a
-                          href={`/kost/${p.slug}`}
-                          target="_blank"
-                          class="flex-1 text-center text-xs font-semibold text-accent hover:underline py-2 border border-[#E6F0FA] rounded-xl hover:bg-[#F4F7FA] transition-colors"
-                        >
-                          Lihat Halaman
-                        </a>
-                        <a
-                          href={`/dashboard/tenant/rooms/${p.id}`}
-                          class="flex-1 text-center text-xs font-bold text-white bg-accent hover:bg-accent-dark py-2 rounded-xl transition-colors"
-                        >
-                          Kelola Kamar
-                        </a>
-                      </div>
-                    </div>
-                  )}
-                </For>
-              </div>
-            </Show>
-          </Suspense>
         </div>
 
         <Show when={modalOpen()}>

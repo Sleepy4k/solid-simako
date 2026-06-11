@@ -21,8 +21,21 @@ export default createMiddleware({
       const fetchEvent = getRequestEvent() as any;
       if (!fetchEvent) return;
 
-      const cookieHeader =
-        (fetchEvent.request as Request | undefined)?.headers?.get("cookie") ?? "";
+      let cookieHeader = "";
+      try {
+        const req = (fetchEvent.request as any);
+        if (req && req.headers) {
+          if (typeof req.headers.get === "function") {
+            cookieHeader = req.headers.get("cookie") || "";
+          } else if (req.headers["cookie"]) {
+            cookieHeader = req.headers["cookie"];
+          } else if (req.headers.cookie) {
+            cookieHeader = req.headers.cookie;
+          }
+        }
+      } catch (e) {
+        console.error("[Middleware] Header error:", e);
+      }
       if (!cookieHeader) return;
 
       const token = parseCookieValue(cookieHeader, COOKIE_NAME);

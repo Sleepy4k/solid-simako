@@ -1,8 +1,7 @@
 import { defineConfig, loadEnv } from "vite";
-import { nitroV2Plugin as nitro } from "@solidjs/vite-plugin-nitro-2";
 import { solidStart } from "@solidjs/start/config";
+import { nitroV2Plugin as nitro } from "@solidjs/vite-plugin-nitro-2";
 import tailwindcss from "@tailwindcss/vite";
-import { resolve } from "path";
 
 const SERVER_ONLY = [
   "drizzle-orm",
@@ -42,18 +41,33 @@ export default defineConfig(({ command, mode }) => {
     }
   }
 
+  const origin = process.env.ORIGIN || process.env.APP_URL || `http://localhost:${env.PORT || 3000}`;
+  process.env.ORIGIN = origin;
+  process.env.NITRO_URL = origin;
+
+  const nitroPreset = env.NITRO_PRESET || "node-server";
+
   return {
     server: {
       host: true,
       port: Number(env.PORT) || 3000,
     },
     plugins: [
+      tailwindcss(),
       solidStart({
         middleware: "./src/middleware/index.ts",
       }),
-      tailwindcss(),
       nitro({
-        preset: "node-server",
+        preset: nitroPreset,
+        // Nitro's moduleSideEffects(id) returns false for entry-server.js
+        // (not in runtimeDir), causing Rollup to tree-shake Meta/Title out of
+        // entry.mjs while keeping the export statement → SyntaxError at runtime.
+        // treeshake:false prevents this.
+        rollupConfig: {
+          treeshake: false,
+        },
+        // Fix TypeError: Invalid URL – see src/server/plugins/url-fix.ts
+        plugins: ["./src/server/plugins/url-fix.ts"],
         routeRules: {
           "/**": {
             headers: {
@@ -74,8 +88,26 @@ export default defineConfig(({ command, mode }) => {
         },
       }),
     ],
+    environments: {
+      ssr: {
+        // Only override DEV/PROD during `vite build`.  In dev mode the SSR
+        // environment must have DEV=true so SolidStart uses its Vite-served
+        // dev manifest (getSsrDevManifest).  Forcing DEV=false in dev causes
+        // getSsrProdManifest to run, which looks for a client Vite manifest
+        // that doesn't exist yet → "No entry found in vite manifest" error.
+        // During the build step the intermediate SSR bundle still reports
+        // DEV=true, which would make the prod server try to load the dev
+        // manifest at runtime (no Vite server → ERR_MODULE_NOT_FOUND), so
+        // we must stamp DEV=false/PROD=true only for the build.
+        define: command === "build" ? {
+          "import.meta.env.DEV": "false",
+          "import.meta.env.PROD": "true",
+        } : {},
+      },
+    },
     ssr: {
       external: SERVER_ONLY,
+      noExternal: ["lucide-solid"],
     },
     build: {
       rollupOptions: {
@@ -86,13 +118,5 @@ export default defineConfig(({ command, mode }) => {
     optimizeDeps: {
       exclude: SERVER_ONLY,
     },
-    resolve: {
-      alias: [
-        {
-          find: /^lucide-solid$/,
-          replacement: resolve("node_modules/lucide-solid/dist/esm/lucide-solid.mjs"),
-        },
-      ],
-    },
-  }
+  };
 });

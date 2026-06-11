@@ -12,10 +12,14 @@ module.exports = {
       env: {
         NODE_ENV: "development",
         PORT: 3000,
+        APP_URL: "http://localhost:3000",
+        ORIGIN: "http://localhost:3000",
       },
       env_production: {
         NODE_ENV: "production",
         PORT: 3000,
+        APP_URL: "http://localhost:3000",
+        ORIGIN: "http://localhost:3000",
       },
       log_date_format: "YYYY-MM-DD HH:mm:ss",
       error_file: "./logs/err.log",

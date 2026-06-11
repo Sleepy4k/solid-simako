@@ -1,6 +1,6 @@
 import { createAsync, useParams } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Show, For, createSignal, Suspense, onMount } from "solid-js";
+import { Show, For, createSignal, onMount } from "solid-js";
 import { getRoomDetail, logRoomViewAction } from "~/server/actions/rooms";
 import { LandingLayout } from "~/layouts/LandingLayout";
 import { SITE, KOST_TYPE_LABELS, GENDER_TYPE_LABELS, GENDER_TYPE_COLORS } from "~/config/site";
@@ -31,7 +31,7 @@ function GalleryImage(props: { url: string; alt: string; active: boolean; onClic
 
 function RoomDetailContent() {
   const params = useParams<{ slug: string; id: string }>();
-  const data   = createAsync(() => getRoomDetail(params.id));
+  const data   = createAsync(() => getRoomDetail(params.id), { deferStream: true });
   const [activeImg, setActiveImg] = createSignal(0);
 
   onMount(() => {
@@ -326,23 +326,7 @@ function RoomDetailContent() {
 export default function KamarDetailPage() {
   return (
     <LandingLayout>
-      <Suspense
-        fallback={
-          <div class="max-w-6xl mx-auto px-5 pt-20 pb-10 animate-pulse">
-            <div class="h-4 bg-[#E6F0FA] rounded w-64 mb-6" />
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              <div class="lg:col-span-2 space-y-4">
-                <div class="aspect-video bg-[#E6F0FA] rounded-2xl" />
-                <div class="h-48 bg-[#E6F0FA] rounded-2xl" />
-                <div class="h-32 bg-[#E6F0FA] rounded-2xl" />
-              </div>
-              <div class="h-72 bg-[#E6F0FA] rounded-2xl" />
-            </div>
-          </div>
-        }
-      >
-        <RoomDetailContent />
-      </Suspense>
+      <RoomDetailContent />
     </LandingLayout>
   );
 }

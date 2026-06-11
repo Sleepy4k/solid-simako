@@ -1,6 +1,6 @@
 import { createAsync, useNavigate, useParams } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Show, For, Suspense, createSignal, createEffect } from "solid-js";
+import { Show, For, createSignal, createEffect } from "solid-js";
 import { useAuth } from "~/stores/auth";
 import {
   getPropertyRooms, createRoomAction, updateRoomAction,
@@ -290,7 +290,7 @@ function PropertyDetailContent() {
     if (u.role !== "tenant") { navigate("/dashboard", { replace: true }); return; }
   });
 
-  const data = createAsync(() => getPropertyRooms(propertyId()));
+  const data = createAsync(() => getPropertyRooms(propertyId()), { deferStream: true });
 
   const [modal,        setModal]        = createSignal<"addRoom" | "editRoom" | "editProp" | "deleteRoom" | null>(null);
   const [selectedRoom, setSelectedRoom] = createSignal<RoomDetail | null>(null);
@@ -408,7 +408,6 @@ function PropertyDetailContent() {
                 </button>
               </div>
 
-              <Suspense fallback={<div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">{[1,2,3].map(() => <div class="h-40 bg-[#E6F0FA] rounded-2xl animate-pulse"/>)}</div>}>
                 <Show
                   when={rooms().length > 0}
                   fallback={
@@ -478,7 +477,6 @@ function PropertyDetailContent() {
                     </For>
                   </div>
                 </Show>
-              </Suspense>
             </div>
           </div>
 

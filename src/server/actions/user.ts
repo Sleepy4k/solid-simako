@@ -98,7 +98,6 @@ export async function getNotifications(): Promise<Notification[]> {
     return [];
   }
 }
-}
 
 export async function markNotificationsRead() {
   "use server";

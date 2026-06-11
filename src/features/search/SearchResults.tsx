@@ -1,4 +1,4 @@
-import { For, Show, Suspense } from "solid-js";
+import { For, Show } from "solid-js";
 import { createAsync, useSearchParams } from "@solidjs/router";
 import { searchRooms } from "~/server/actions/rooms";
 import { RoomCard } from "~/features/landing/RoomCard";
@@ -48,7 +48,7 @@ export function SearchResults() {
     sort:     (valueOf(sp.sort) as SearchParams["sort"]) || "recommended",
   });
 
-  const result = createAsync(() => searchRooms(params()));
+  const result = createAsync(() => searchRooms(params()), { deferStream: true });
 
   const activeSort = () => valueOf(sp.sort) || "recommended";
 
@@ -86,14 +86,7 @@ export function SearchResults() {
         </For>
       </div>
 
-      <Suspense
-        fallback={
-          <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-            <ResultsSkeleton />
-          </div>
-        }
-      >
-        <Show
+      <Show
           when={(result()?.data ?? []).length > 0}
           fallback={
             <div class="flex flex-col items-center justify-center py-20 text-center">
@@ -123,7 +116,6 @@ export function SearchResults() {
             total={result()?.total}
           />
         </Show>
-      </Suspense>
     </div>
   );
 }

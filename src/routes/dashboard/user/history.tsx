@@ -1,6 +1,6 @@
 import { useNavigate, createAsync } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Show, For, Suspense, createEffect } from "solid-js";
+import { Show, For, createEffect } from "solid-js";
 import { useAuth } from "~/stores/auth";
 import { getRentalHistory } from "~/server/actions/user";
 import { DashboardLayout } from "~/layouts/DashboardLayout";
@@ -47,16 +47,11 @@ function HistoryContent() {
     if (u.role !== "user") { navigate("/dashboard", { replace: true }); return; }
   });
 
-  const history = createAsync(() => getRentalHistory());
+  const history = createAsync(() => getRentalHistory(), { deferStream: true });
 
   return (
     <Show when={isLoaded() && user()?.role === "user"} fallback={<DashboardSkeleton />}>
       <DashboardLayout user={user()!} title="Riwayat Sewa" breadcrumb={`${SITE.name} / Riwayat`}>
-        <Suspense fallback={
-          <div class="space-y-3">
-            {[1,2,3].map(() => <div class="h-24 bg-[#E6F0FA] rounded-2xl animate-pulse" />)}
-          </div>
-        }>
           <Show
             when={(history()?.length ?? 0) > 0}
             fallback={
@@ -105,7 +100,6 @@ function HistoryContent() {
               </div>
             </div>
           </Show>
-        </Suspense>
       </DashboardLayout>
     </Show>
   );

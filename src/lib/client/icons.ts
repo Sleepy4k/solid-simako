@@ -1,5 +1,4 @@
 import {
-  Home,
   Heart,
   ClipboardList,
   User,
@@ -27,7 +26,6 @@ import {
   Check,
   AlertCircle,
   Copy,
-  Instagram,
   Mail,
   Loader,
   Plus,
@@ -57,6 +55,8 @@ import {
 } from "lucide-solid";
 
 const X = IconX;
+const Home = House;
+const Instagram = Camera;
 
 export const ICON_MAP = {
   Home, Heart, ClipboardList, User, Building2, DollarSign,

@@ -17,6 +17,7 @@
     "db:seed:prod": "bun src/server/db/seed-prod.ts"
   },
   "dependencies": {
+    "@solidjs/meta": "^0.29.4",
     "@solidjs/router": "^0.15.4",
     "@solidjs/start": "2.0.0-alpha.2",
     "@solidjs/vite-plugin-nitro-2": "^0.1.0",
@@ -25,8 +26,8 @@
     "gsap": "^3.15.0",
     "jose": "^5.10.0",
     "lucide-solid": "^1.17.0",
-    "mysql2": "^3.22.4",
-    "nodemailer": "^8.0.10",
+    "mysql2": "^3.22.5",
+    "nodemailer": "^8.0.11",
     "nprogress": "^0.2.0",
     "solid-js": "^1.9.13",
     "uuid": "^14.0.0",
@@ -35,8 +36,8 @@
   },
   "devDependencies": {
     "@tailwindcss/vite": "^4.3.0",
-    "@types/node": "^25.9.1",
-    "@types/nodemailer": "^8.0.0",
+    "@types/node": "^25.9.3",
+    "@types/nodemailer": "^8.0.1",
     "@types/nprogress": "^0.2.3",
     "drizzle-kit": "^0.31.10",
     "tailwindcss": "^4.3.0"

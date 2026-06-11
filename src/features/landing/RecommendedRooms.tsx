@@ -1,5 +1,5 @@
 import { createAsync } from "@solidjs/router";
-import { For, Show, Suspense, onMount } from "solid-js";
+import { For, Show, onMount } from "solid-js";
 import { getRecommendedRooms } from "~/server/actions/rooms";
 import { RoomCard } from "./RoomCard";
 
@@ -21,7 +21,7 @@ function RoomSkeleton() {
 }
 
 function RoomsGrid() {
-  const rooms = createAsync(() => getRecommendedRooms(8));
+  const rooms = createAsync(() => getRecommendedRooms(8), { deferStream: true });
 
   return (
     <Show
@@ -79,15 +79,7 @@ export function RecommendedRooms() {
         </div>
 
         <div class="rec-reveal grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-5">
-          <Suspense
-            fallback={
-              <For each={Array.from({ length: 8 })}>
-                {() => <RoomSkeleton />}
-              </For>
-            }
-          >
-            <RoomsGrid />
-          </Suspense>
+          <RoomsGrid />
         </div>
       </div>
     </section>

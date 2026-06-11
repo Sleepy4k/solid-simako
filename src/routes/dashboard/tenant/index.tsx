@@ -1,6 +1,7 @@
 import { useNavigate } from "@solidjs/router";
+import { createAsync } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Show, For, Suspense, createResource, createEffect } from "solid-js";
+import { Show, For, createEffect } from "solid-js";
 import { useAuth } from "~/stores/auth";
 import { getTenantStats } from "~/server/actions/rooms";
 import { DashboardLayout } from "~/layouts/DashboardLayout";
@@ -8,7 +9,7 @@ import { DashboardSkeleton } from "~/components/ui/DashboardSkeleton";
 import { SITE } from "~/config/site";
 
 function TenantOverview() {
-  const [stats] = createResource(() => getTenantStats());
+  const stats = createAsync(() => getTenantStats(), { deferStream: true });
 
   return (
     <div class="space-y-6">
@@ -108,9 +109,7 @@ export default function TenantDashboard() {
         fallback={<DashboardSkeleton />}
       >
         <DashboardLayout user={user()!} title="Dashboard Pemilik Kos" breadcrumb={`${SITE.name} / Tenant`}>
-          <Suspense fallback={<div class="space-y-5">{[1,2,3].map(() => <div class="h-24 bg-[#E6F0FA] rounded-2xl animate-pulse" />)}</div>}>
-            <TenantOverview />
-          </Suspense>
+          <TenantOverview />
         </DashboardLayout>
       </Show>
     </>

@@ -1,4 +1,4 @@
-import { createSignal, Show, For, Suspense } from "solid-js";
+import { createSignal, Show, For } from "solid-js";
 import { createAsync } from "@solidjs/router";
 import { Bell, X } from "lucide-solid";
 import type { AuthUser, Notification } from "~/types";
@@ -65,7 +65,7 @@ function NotificationList(props: { notifications: () => Notification[] | undefin
 
 export function DashboardTopBar(props: DashboardTopBarProps) {
   const [notifOpen, setNotifOpen] = createSignal(false);
-  const notifications = createAsync(() => getNotifications());
+  const notifications = createAsync(() => getNotifications(), { deferStream: true });
 
   const unreadCount = () => (notifications() ?? []).filter((n) => !n.isRead).length;
 
@@ -93,13 +93,7 @@ export function DashboardTopBar(props: DashboardTopBarProps) {
         <div class="flex items-center gap-3">
           <span class="text-xs text-navy/40 hidden md:block">{today}</span>
 
-          <Suspense fallback={
-            <button type="button" class="relative p-2.5 rounded-xl hover:bg-[#F4F7FA] transition-colors" aria-label="Notifikasi">
-              <Bell class="w-5 h-5 text-navy/60" />
-            </button>
-          }>
-            <NotificationButton notifications={notifications} unreadCount={unreadCount} openNotif={openNotif} />
-          </Suspense>
+          <NotificationButton notifications={notifications} unreadCount={unreadCount} openNotif={openNotif} />
 
           <div class="flex items-center gap-2 pl-3 border-l border-[#E6F0FA]">
             <div class="w-8 h-8 bg-[#E6F0FA] rounded-full flex items-center justify-center text-xs font-black text-accent select-none">
@@ -114,9 +108,7 @@ export function DashboardTopBar(props: DashboardTopBarProps) {
       </header>
 
       <Modal open={notifOpen()} onClose={() => setNotifOpen(false)} title="Notifikasi" size="md">
-        <Suspense fallback={<div class="p-8 text-center text-navy/40">Memuat...</div>}>
-          <NotificationList notifications={notifications} />
-        </Suspense>
+        <NotificationList notifications={notifications} />
       </Modal>
     </>
   );

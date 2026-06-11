@@ -1,6 +1,6 @@
 import { useNavigate } from "@solidjs/router";
 import { Title, Meta } from "@solidjs/meta";
-import { Show, For, Suspense, createSignal, createEffect } from "solid-js";
+import { Show, For, createSignal, createEffect } from "solid-js";
 import { useAuth } from "~/stores/auth";
 import { createAsync } from "@solidjs/router";
 import { getUserFavorites, toggleFavoriteAction } from "~/server/actions/user";
@@ -22,7 +22,7 @@ function FavoritesContent() {
     if (u.role !== "user") { navigate("/dashboard", { replace: true }); return; }
   });
 
-  const data = createAsync(() => getUserFavorites());
+  const data = createAsync(() => getUserFavorites(), { deferStream: true });
   const [removing, setRemoving] = createSignal<string | null>(null);
 
   const handleRemove = async (roomId: string) => {
@@ -35,11 +35,6 @@ function FavoritesContent() {
   return (
     <Show when={isLoaded() && user()?.role === "user"} fallback={<DashboardSkeleton />}>
       <DashboardLayout user={user()!} title="Kos Favorit" breadcrumb={`${SITE.name} / Favorit`}>
-        <Suspense fallback={
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-            {[1,2,3,4].map(() => <div class="h-40 bg-[#E6F0FA] rounded-2xl animate-pulse" />)}
-          </div>
-        }>
           <Show
             when={(data()?.favorites.length ?? 0) > 0}
             fallback={
@@ -110,7 +105,6 @@ function FavoritesContent() {
               </div>
             </div>
           </Show>
-        </Suspense>
       </DashboardLayout>
     </Show>
   );
