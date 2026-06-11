@@ -1,6 +1,6 @@
 import { Show, type JSX } from "solid-js";
 import { Portal } from "solid-js/web";
-import X from "lucide-solid/icons/x";
+import { X } from "lucide-solid";
 
 interface ModalProps {
   open:     boolean;
@@ -44,3 +44,4 @@ export function Modal(props: ModalProps) {
     </Show>
   );
 }
+

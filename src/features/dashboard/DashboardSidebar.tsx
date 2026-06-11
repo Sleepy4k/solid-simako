@@ -1,6 +1,6 @@
 import { createSignal, For } from "solid-js";
 import { A, useLocation, useNavigate } from "@solidjs/router";
-import LogOut from "lucide-solid/icons/log-out";
+import { LogOut } from "lucide-solid";
 import type { AuthUser } from "~/types";
 import type { IconName } from "~/lib/client/icons";
 import { ICON_MAP } from "~/lib/client/icons";
@@ -101,3 +101,4 @@ export function DashboardSidebar(props: DashboardSidebarProps) {
     </>
   );
 }
+

@@ -1,5 +1,5 @@
 import { splitProps, type JSX } from "solid-js";
-import Loader from "lucide-solid/icons/loader";
+import { Loader } from "lucide-solid";
 
 type Variant = "primary" | "secondary" | "danger" | "ghost" | "outline";
 type Size    = "sm" | "md" | "lg";
@@ -45,3 +45,4 @@ export function Button(props: ButtonProps) {
     </button>
   );
 }
+

@@ -1,8 +1,7 @@
-import { createSignal, Show, For } from "solid-js";
+import { createSignal, Show, For, Suspense } from "solid-js";
 import { createAsync } from "@solidjs/router";
-import Bell from "lucide-solid/icons/bell";
-import X from "lucide-solid/icons/x";
-import type { AuthUser } from "~/types";
+import { Bell, X } from "lucide-solid";
+import type { AuthUser, Notification } from "~/types";
 import { getNotifications, markNotificationsRead } from "~/server/actions/user";
 import { Modal } from "~/components/ui/Modal";
 
@@ -10,6 +9,58 @@ interface DashboardTopBarProps {
   user:        AuthUser;
   title:       string;
   breadcrumb?: string;
+}
+
+function NotificationButton(props: {
+  notifications: () => Notification[] | undefined;
+  unreadCount: () => number;
+  openNotif: () => void;
+}) {
+  return (
+    <button type="button" onClick={props.openNotif} class="relative p-2.5 rounded-xl hover:bg-[#F4F7FA] transition-colors" aria-label="Notifikasi">
+      <Bell class="w-5 h-5 text-navy/60" />
+      <Show when={props.unreadCount() > 0}>
+        <span class="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5">
+          {props.unreadCount() > 9 ? "9+" : props.unreadCount()}
+        </span>
+      </Show>
+    </button>
+  );
+}
+
+function NotificationList(props: { notifications: () => Notification[] | undefined }) {
+  return (
+    <div class="max-h-96 overflow-y-auto">
+      <Show
+        when={(props.notifications() ?? []).length > 0}
+        fallback={
+          <div class="p-8 text-center text-navy/40">
+            <Bell class="w-12 h-12 mx-auto mb-3 text-navy/15" />
+            <p class="text-sm">Belum ada notifikasi</p>
+          </div>
+        }
+      >
+        <ul class="divide-y divide-[#F4F7FA]">
+          <For each={props.notifications()}>
+            {(n) => (
+              <li class={`px-5 py-4 ${!n.isRead ? "bg-[#F4F7FA]" : ""}`}>
+                <div class="flex items-start gap-3">
+                  <div class={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.isRead ? "bg-accent" : "bg-transparent"}`} />
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-navy">{n.title}</p>
+                    <p class="text-xs text-navy/55 mt-0.5 leading-relaxed">{n.body}</p>
+                    <p class="text-[10px] text-navy/30 mt-1.5">
+                      {n.createdAt.toLocaleDateString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
+                    </p>
+                  </div>
+                </div>
+              </li>
+            )}
+          </For>
+        </ul>
+      </Show>
+    </div>
+  );
 }
 
 export function DashboardTopBar(props: DashboardTopBarProps) {
@@ -42,14 +93,13 @@ export function DashboardTopBar(props: DashboardTopBarProps) {
         <div class="flex items-center gap-3">
           <span class="text-xs text-navy/40 hidden md:block">{today}</span>
 
-          <button type="button" onClick={openNotif} class="relative p-2.5 rounded-xl hover:bg-[#F4F7FA] transition-colors" aria-label="Notifikasi">
-            <Bell class="w-5 h-5 text-navy/60" />
-            <Show when={unreadCount() > 0}>
-              <span class="absolute top-1.5 right-1.5 min-w-[16px] h-4 bg-red-500 text-white text-[9px] font-black rounded-full flex items-center justify-center px-0.5">
-                {unreadCount() > 9 ? "9+" : unreadCount()}
-              </span>
-            </Show>
-          </button>
+          <Suspense fallback={
+            <button type="button" class="relative p-2.5 rounded-xl hover:bg-[#F4F7FA] transition-colors" aria-label="Notifikasi">
+              <Bell class="w-5 h-5 text-navy/60" />
+            </button>
+          }>
+            <NotificationButton notifications={notifications} unreadCount={unreadCount} openNotif={openNotif} />
+          </Suspense>
 
           <div class="flex items-center gap-2 pl-3 border-l border-[#E6F0FA]">
             <div class="w-8 h-8 bg-[#E6F0FA] rounded-full flex items-center justify-center text-xs font-black text-accent select-none">
@@ -64,36 +114,9 @@ export function DashboardTopBar(props: DashboardTopBarProps) {
       </header>
 
       <Modal open={notifOpen()} onClose={() => setNotifOpen(false)} title="Notifikasi" size="md">
-        <div class="max-h-96 overflow-y-auto">
-          <Show
-            when={(notifications() ?? []).length > 0}
-            fallback={
-              <div class="p-8 text-center text-navy/40">
-                <Bell class="w-12 h-12 mx-auto mb-3 text-navy/15" />
-                <p class="text-sm">Belum ada notifikasi</p>
-              </div>
-            }
-          >
-            <ul class="divide-y divide-[#F4F7FA]">
-              <For each={notifications()}>
-                {(n) => (
-                  <li class={`px-5 py-4 ${!n.isRead ? "bg-[#F4F7FA]" : ""}`}>
-                    <div class="flex items-start gap-3">
-                      <div class={`w-2 h-2 rounded-full mt-1.5 flex-shrink-0 ${!n.isRead ? "bg-accent" : "bg-transparent"}`} />
-                      <div class="flex-1 min-w-0">
-                        <p class="text-sm font-semibold text-navy">{n.title}</p>
-                        <p class="text-xs text-navy/55 mt-0.5 leading-relaxed">{n.body}</p>
-                        <p class="text-[10px] text-navy/30 mt-1.5">
-                          {n.createdAt.toLocaleDateString("id-ID", { day: "numeric", month: "short", hour: "2-digit", minute: "2-digit" })}
-                        </p>
-                      </div>
-                    </div>
-                  </li>
-                )}
-              </For>
-            </ul>
-          </Show>
-        </div>
+        <Suspense fallback={<div class="p-8 text-center text-navy/40">Memuat...</div>}>
+          <NotificationList notifications={notifications} />
+        </Suspense>
       </Modal>
     </>
   );

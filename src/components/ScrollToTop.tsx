@@ -1,5 +1,5 @@
 import { createSignal, onMount, onCleanup } from "solid-js";
-import ChevronUp from "lucide-solid/icons/chevron-up";
+import { ChevronUp } from "lucide-solid";
 
 export function ScrollToTop() {
   const [visible, setVisible] = createSignal(false);
@@ -46,3 +46,4 @@ export function ScrollToTop() {
     </button>
   );
 }
+

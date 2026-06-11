@@ -1,8 +1,6 @@
 import { A } from "@solidjs/router";
 import { For, Show } from "solid-js";
-import Star from "lucide-solid/icons/star";
-import MapPin from "lucide-solid/icons/map-pin";
-import Eye from "lucide-solid/icons/eye";
+import { Star, MapPin, Eye } from "lucide-solid";
 import type { IconName } from "~/lib/client/icons";
 import { ICON_MAP } from "~/lib/client/icons";
 import type { RecommendedRoom } from "~/types";
@@ -132,3 +130,4 @@ export function RoomCard(props: RoomCardProps) {
     </A>
   );
 }
+

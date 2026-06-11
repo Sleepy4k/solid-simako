@@ -22,12 +22,23 @@ function getEvent(): H3Event | null {
 }
 
 export function getServerCookie(name: string): string | undefined {
-  const ev = getEvent();
-  if (ev) return getCookie(ev, name);
+  try {
+    const ev = getEvent();
+    if (ev) {
+      const val = getCookie(ev, name);
+      if (val !== undefined) return val;
+    }
+  } catch (err) {
+    // Fallback if event is not a standard H3Event
+  }
 
-  const requestEvent = getRequestEvent() as { request?: Request } | undefined;
-  const header = requestEvent?.request?.headers?.get("cookie") ?? "";
-  return parseCookieHeader(header)[name];
+  try {
+    const requestEvent = getRequestEvent() as { request?: Request } | undefined;
+    const header = requestEvent?.request?.headers?.get("cookie") ?? "";
+    return parseCookieHeader(header)[name];
+  } catch (err) {
+    return undefined;
+  }
 }
 
 export function setServerCookie(

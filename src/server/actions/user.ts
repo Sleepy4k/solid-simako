@@ -76,22 +76,28 @@ export async function toggleFavoriteAction(roomId: string) {
 
 export async function getNotifications(): Promise<Notification[]> {
   "use server";
-  const user = await requireAuth();
-  const rows = await db
-    .select()
-    .from(notifications)
-    .where(eq(notifications.userId, user.id))
-    .orderBy(desc(notifications.createdAt))
-    .limit(20);
-  return rows.map((n) => ({
-    id:        n.id,
-    type:      n.type,
-    title:     n.title,
-    body:      n.body,
-    isRead:    n.isRead,
-    relatedId: n.relatedId ?? null,
-    createdAt: n.createdAt,
-  }));
+  try {
+    const user = await requireAuth();
+    const rows = await db
+      .select()
+      .from(notifications)
+      .where(eq(notifications.userId, user.id))
+      .orderBy(desc(notifications.createdAt))
+      .limit(20);
+    return rows.map((n) => ({
+      id:        n.id,
+      type:      n.type,
+      title:     n.title,
+      body:      n.body,
+      isRead:    n.isRead,
+      relatedId: n.relatedId ?? null,
+      createdAt: n.createdAt,
+    }));
+  } catch (error) {
+    console.error("Error fetching notifications:", error);
+    return [];
+  }
+}
 }
 
 export async function markNotificationsRead() {
@@ -158,3 +164,4 @@ export async function updateProfileAction(formData: FormData) {
   await db.update(users).set({ name, phone }).where(eq(users.id, user.id));
   return { success: true };
 }
+

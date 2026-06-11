@@ -1,6 +1,5 @@
 import { A } from "@solidjs/router";
-import Instagram from "lucide-solid/icons/instagram";
-import Mail from "lucide-solid/icons/mail";
+import { Instagram, Mail } from "lucide-solid";
 import { SITE } from "~/config/site";
 
 const QUICK_LINKS = [

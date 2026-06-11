@@ -1,7 +1,7 @@
 import { Title, Meta } from "@solidjs/meta";
 import { A } from "@solidjs/router";
 import { createSignal, createEffect, Show } from "solid-js";
-import AlertCircle from "lucide-solid/icons/alert-circle";
+import { AlertCircle } from "lucide-solid";
 import { forgotPasswordAction } from "~/server/actions/auth";
 import { forgotPasswordSchema } from "~/lib/shared/validation";
 import { Button } from "~/components/ui/Button";
@@ -125,3 +125,4 @@ export default function ForgotPasswordPage() {
     </>
   );
 }
+

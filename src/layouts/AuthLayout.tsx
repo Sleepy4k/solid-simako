@@ -1,6 +1,6 @@
 import type { JSX } from "solid-js";
 import { A } from "@solidjs/router";
-import ChevronLeft from "lucide-solid/icons/chevron-left";
+import { ChevronLeft } from "lucide-solid";
 import { SITE } from "~/config/site";
 
 interface AuthLayoutProps {
@@ -47,3 +47,4 @@ export function AuthLayout(props: AuthLayoutProps) {
     </div>
   );
 }
+

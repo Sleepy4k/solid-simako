@@ -1,7 +1,6 @@
 import { For, Show } from "solid-js";
 import { useSearchParams } from "@solidjs/router";
-import ChevronLeft from "lucide-solid/icons/chevron-left";
-import ChevronRight from "lucide-solid/icons/chevron-right";
+import { ChevronLeft, ChevronRight } from "lucide-solid";
 import { CustomSelect, type SelectOption } from "~/components/ui/Select";
 
 interface PaginationProps {
@@ -165,3 +164,4 @@ export function Pagination(props: PaginationProps) {
     </div>
   );
 }
+

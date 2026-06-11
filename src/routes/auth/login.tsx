@@ -1,9 +1,7 @@
 import { Title, Meta } from "@solidjs/meta";
 import { createSignal, createEffect, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
-import Eye from "lucide-solid/icons/eye";
-import EyeOff from "lucide-solid/icons/eye-off";
-import AlertCircle from "lucide-solid/icons/alert-circle";
+import { Eye, EyeOff, AlertCircle } from "lucide-solid";
 import { loginAction } from "~/server/actions/auth";
 import { loginSchema } from "~/lib/shared/validation";
 import { Button } from "~/components/ui/Button";
@@ -147,3 +145,4 @@ export default function LoginPage() {
     </>
   );
 }
+

@@ -1,9 +1,7 @@
 import { Title, Meta } from "@solidjs/meta";
 import { A, useSearchParams, useNavigate } from "@solidjs/router";
 import { createSignal, createEffect, Show } from "solid-js";
-import AlertCircle from "lucide-solid/icons/alert-circle";
-import Eye from "lucide-solid/icons/eye";
-import EyeOff from "lucide-solid/icons/eye-off";
+import { AlertCircle, Eye, EyeOff } from "lucide-solid";
 import { resetPasswordAction } from "~/server/actions/auth";
 import { resetPasswordSchema } from "~/lib/shared/validation";
 import { Button } from "~/components/ui/Button";
@@ -179,3 +177,4 @@ export default function ResetPasswordPage() {
     </>
   );
 }
+

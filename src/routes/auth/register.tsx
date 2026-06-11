@@ -1,10 +1,7 @@
 import { Title, Meta } from "@solidjs/meta";
 import { createSignal, createEffect, Show } from "solid-js";
 import { A, useNavigate } from "@solidjs/router";
-import Eye from "lucide-solid/icons/eye";
-import EyeOff from "lucide-solid/icons/eye-off";
-import AlertCircle from "lucide-solid/icons/alert-circle";
-import CheckCircle from "lucide-solid/icons/check-circle";
+import { Eye, EyeOff, AlertCircle, CheckCircle } from "lucide-solid";
 import { registerUserAction } from "~/server/actions/auth";
 import { registerUserSchema } from "~/lib/shared/validation";
 import { Button } from "~/components/ui/Button";
@@ -230,3 +227,4 @@ export default function RegisterPage() {
     </>
   );
 }
+

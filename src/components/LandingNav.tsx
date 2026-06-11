@@ -1,9 +1,6 @@
 import { createSignal, onMount, onCleanup, Show, For, createEffect } from "solid-js";
 import { A, useNavigate, useLocation } from "@solidjs/router";
-import Search from "lucide-solid/icons/search";
-import Menu from "lucide-solid/icons/menu";
-import X from "lucide-solid/icons/x";
-import Building2 from "lucide-solid/icons/building-2";
+import { Search, Menu, X, Building2 } from "lucide-solid";
 import { SITE, KOST_TYPE_LABELS } from "~/config/site";
 import { liveSearchAction } from "~/server/actions/search";
 import type { SearchPreviewItem } from "~/types";
@@ -245,3 +242,4 @@ function SearchDropdown(props: { items: SearchPreviewItem[]; loading: boolean; q
     </div>
   );
 }
+
